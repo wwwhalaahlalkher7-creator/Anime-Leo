@@ -1,0 +1,39 @@
+name: anime_platform_mobile
+description: Anime Platform Android app
+publish_to: "none"
+version: 1.30.0+18
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2
+  path_provider: ^2.1.5
+  cached_network_image: ^3.4.1
+  shared_preferences: ^2.5.3
+  url_launcher: ^6.3.2
+  android_intent_plus: ^5.3.1
+  share_plus: ^12.0.1
+  flutter_svg: ^2.0.17
+  video_player: ^2.9.2
+  chewie: ^1.10.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/anime_leo_wordmark.png
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/anime_leo_icon.png
+  adaptive_icon_background: "#0C0A14"
+  adaptive_icon_foreground: assets/anime_leo_icon.png
+  min_sdk_android: 21

@@ -1,0 +1,15 @@
+{
+  "name": "anime-platform-backend",
+  "private": true,
+  "version": "1.30.0.17",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create anime-platform-db",
+    "db:migrate": "wrangler d1 migrations apply anime-platform-db --remote",
+    "test:smoke": "node tests/smoke.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.116.0"
+  }
+}

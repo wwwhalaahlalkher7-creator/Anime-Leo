@@ -1,0 +1,52 @@
+Version: 1.29.0+15
+Anime Leo V1.29.0+15
+
+Release candidate prepared from V1.27.0+13.
+Playback remains legal-provider-only; no unverified external stream provider is enabled by default.
+Anime Leo Release Manifest
+
+Release: V1.24.0
+Mobile: 1.24.0+8
+API: v1
+
+Branding: Anime Leo icon and wordmark
+Legal video architecture: enabled
+Video playback: disabled
+Ads: disabled
+Analytics: disabled
+D1 schema: current through V1.24.0 migrations
+Backend catalog/provider architecture: current
+Termux role: upload/deployment only
+
+Analyzer cleanup:
+- Added curly braces to control-flow statements
+- Removed unused legacy HomeScreen helpers
+- Migrated RadioListTile groups to RadioGroup
+- Removed unused HomeScreen health future
+
+V1.25.3 update: TMDB animation catalog expanded with categories, pagination/load-more, and English external titles in both Arabic and English interfaces.
+
+V1.25.3: Expanded TMDB animation catalog, categories, pagination, and English external titles in both interfaces.
+
+
+V1.28 Stage 4 Content & Episodes Fix:
+- Episode details now prefer the same Anivexa subtitle episode catalog used by playback, with Jikan/catalog fallback.
+- Versioned episode cache avoids stale empty episode responses.
+- Top-anime cache/version refreshed and mobile catalog coverage increased.
+- MangaDex Arabic-first catalog now falls back to the broad safe MangaDex catalog when optional filters fail.
+
+
+V1.29.0+15 repair pass:
+- Fixed the legacy `/api/anime/{id}/episodes/{episode}/video` route by explicitly wiring the safe `NoOpVideoProvider`.
+- Fixed provider-manager TypeScript typing by constructing providers as `AnimeProvider[]`.
+- Updated active backend fallback versions to 1.29.0.16.
+- Updated the Android CI workflow to V1.29 and pinned Flutter 3.35.2.
+- Renamed the model test to `v1_29_models_test.dart`.
+
+
+V1.30.0+17 Provider Aggregator:
+- Added concurrent Jikan/AniList metadata aggregation.
+- Deduplicates records by canonicalId and promotes resolved MAL IDs.
+- Merges episode metadata by episode number and deduplicates provider sources.
+- Added /api/providers health/aggregation diagnostics.
+- Keeps playback behind the licensed-provider contract; no unofficial provider was enabled by this change.
