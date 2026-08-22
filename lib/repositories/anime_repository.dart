@@ -136,7 +136,7 @@ class AnimeRepository {
         key,
         maxAge: const Duration(minutes: 15),
       );
-      if (cached != null) return _list(cached);
+      if (cached != null && cached['degraded'] != true) return _list(cached);
     }
 
     try {
@@ -144,12 +144,22 @@ class AnimeRepository {
       // handful of seeded rows. The backend caches/upserts provider results.
       final combined = <Map<String, dynamic>>[];
       var hasNext = true;
+      var providerDegraded = false;
       for (var page = 1; page <= 8 && hasNext; page++) {
         try {
           final response = await api.topAnime(page: page);
           combined.addAll(_list(response).map((a) => a.toJson()));
           hasNext = _hasNext(response);
+          // A degraded response is a provider failure, not the end of the
+          // catalogue. Do not hammer the same unavailable provider for pages
+          // 2..8; keep the partial archive result and retry on the next refresh.
+          if (response['degraded'] == true || response['provider_failed'] == true) {
+            providerDegraded = true;
+            hasNext = false;
+            break;
+          }
         } catch (_) {
+          providerDegraded = true;
           break;
         }
       }
@@ -165,8 +175,15 @@ class AnimeRepository {
       final merged = <String, dynamic>{
         'data': unique,
         'pagination': {'has_next_page': false, 'current_page': 1},
+        'source': providerDegraded ? 'database' : 'provider',
+        'degraded': providerDegraded,
       };
-      await cache.write(key, merged);
+
+      // Never cache a degraded/partial catalogue as if it were complete.
+      // The next refresh must be allowed to retry Jikan.
+      if (!providerDegraded) {
+        await cache.write(key, merged);
+      }
       return _list(merged);
     } catch (error) {
       final stale = await cache.read(

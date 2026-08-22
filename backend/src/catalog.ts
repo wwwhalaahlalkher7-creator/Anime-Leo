@@ -18,6 +18,7 @@ export interface CatalogResult<T> {
   hasNextPage: boolean;
   source: 'database' | 'provider' | 'database+provider' | 'database+external-sources';
   degraded?: boolean;
+  providerFailed?: boolean;
   parentMissing?: boolean;
 }
 
@@ -432,6 +433,7 @@ export async function topCatalog(
       hasNextPage: cached.hasNext,
       source: 'database',
       degraded: true,
+      providerFailed: true,
     };
   }
 }

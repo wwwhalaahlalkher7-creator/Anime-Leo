@@ -797,6 +797,7 @@ export default {
           pagination: { current_page: result.page, has_next_page: result.hasNextPage },
           source: result.source,
           degraded: result.degraded === true,
+          provider_failed: result.providerFailed === true,
         };
       } else if (path === '/anime') {
         const query = (url.searchParams.get('q') || '').trim().slice(0, MAX_QUERY_LENGTH);
@@ -807,6 +808,7 @@ export default {
           pagination: { current_page: result.page, has_next_page: result.hasNextPage },
           source: result.source,
           degraded: result.degraded === true,
+          provider_failed: result.providerFailed === true,
         };
       } else if (path === '/anime/schedule') {
         const allowedDays = new Set(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);

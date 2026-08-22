@@ -1,3 +1,12 @@
+
+## V2.0.0+1
+- Fixed home top-anime pagination resilience when Jikan is rate-limited or temporarily unavailable.
+- Added Jikan retry/backoff and explicit provider-failure metadata.
+- Prevented the mobile repository from repeatedly requesting pages after a degraded provider response.
+- Added MangaDex User-Agent to the Manga/Manhwa catalog requests.
+- Increased catalog sync coverage from 5 to 8 pages per stream.
+- Fixed the sidebar Manga List item to open the real Manga tab instead of a placeholder screen.
+- Updated mobile/backend release version to V2.0.0.
 Version: 1.29.0+15
 Anime Leo V1.29.0+15
 

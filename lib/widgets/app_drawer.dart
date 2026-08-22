@@ -162,7 +162,7 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.menu_book_outlined,
               labelAr: 'قائمة المانجا',
               labelEn: 'Manga List',
-              onTap: () => _openPlaceholder(context, titleAr: 'قائمة المانجا', titleEn: 'Manga List', icon: Icons.menu_book_outlined),
+              onTap: () => _selectTab(context, 1),
             ),
             _item(
               context,

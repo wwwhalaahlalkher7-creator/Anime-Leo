@@ -171,21 +171,42 @@ export class JikanProvider implements AnimeProvider {
     const url = new URL(`${this.baseUrl}${path}`);
     Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'AnimePlatformAPI/1.12',
-      },
-    });
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      let response: Response;
+      try {
+        response = await fetch(url.toString(), {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'AnimePlatformAPI/2.0',
+          },
+        });
+      } catch (error) {
+        lastError = error;
+        if (attempt === 1) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 750));
+        continue;
+      }
 
-    if (!response.ok) {
-      throw new Error(`Provider ${response.status}`);
+      if (response.ok) {
+        const data = await response.json() as unknown;
+        const map = asMap(data);
+        if (!map) throw new Error('Invalid provider response');
+        return map as JikanResponse;
+      }
+
+      const retryable = response.status === 429 || response.status >= 500;
+      lastError = new Error(`Provider ${response.status}`);
+      if (!retryable || attempt === 1) throw lastError;
+
+      const retryAfter = Number(response.headers.get('Retry-After') || '1');
+      const delaySeconds = Number.isFinite(retryAfter)
+        ? Math.min(Math.max(retryAfter, 1), 3)
+        : 1;
+      await new Promise((resolve) => setTimeout(resolve, delaySeconds * 1000));
     }
 
-    const data = await response.json() as unknown;
-    const map = asMap(data);
-    if (!map) throw new Error('Invalid provider response');
-    return map as JikanResponse;
+    throw lastError instanceof Error ? lastError : new Error('Provider unavailable');
   }
 
   async search(query: string, page: number, limit: number): Promise<ProviderPage<AnimeRecord>> {

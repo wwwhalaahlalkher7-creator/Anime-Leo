@@ -33,6 +33,7 @@ async function fetchJson(url: string, init?: RequestInit): Promise<any> {
         signal: controller.signal,
         headers: {
           Accept: 'application/json',
+          'User-Agent': 'AnimeLeo/2.0 (MangaDex API client)',
           ...(init?.headers || {}),
         },
       });
