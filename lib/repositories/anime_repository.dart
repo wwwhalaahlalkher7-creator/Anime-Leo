@@ -239,7 +239,6 @@ class AnimeRepository {
       if (response == null) rethrow;
     }
 
-    if (response == null) return const [];
     final data = response['data'];
     if (data is! List) return const [];
     return data
@@ -267,7 +266,6 @@ class AnimeRepository {
     } catch (_) {
       if (response == null) rethrow;
     }
-    if (response == null) return const [];
     final data = response['data'];
     if (data is! List) return const [];
     return data.whereType<Map>().map((e) => PopularCharacter.fromJson(Map<String, dynamic>.from(e))).where((e) => e.id > 0).toList();

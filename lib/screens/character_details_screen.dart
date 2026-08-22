@@ -44,7 +44,7 @@ class _CharacterDetailsScreenState extends State<CharacterDetailsScreen> {
               Row(children: [const Icon(Icons.favorite, color: Colors.redAccent, size: 18), const SizedBox(width: 6), Text(_format(c.favorites), style: const TextStyle(fontWeight: FontWeight.w800))]),
               if (c.about?.trim().isNotEmpty == true) ...[const SizedBox(height: 14), Text(c.about!, maxLines: 8, overflow: TextOverflow.ellipsis, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.45))],
             ])),
-          ],
+          ]),
           const SizedBox(height: 24),
           Text(AppLanguage.instance.text('الأعمال', 'Anime'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
           const SizedBox(height: 12),

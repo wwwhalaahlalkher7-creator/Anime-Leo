@@ -40,7 +40,14 @@ class _CharactersScreenState extends State<CharactersScreen> {
   }
 
   Future<void> _load(int target, {bool append = false}) async {
-    if (append) setState(() => loadingMore = true); else setState(() { loading = true; error = null; });
+    if (append) {
+      setState(() => loadingMore = true);
+    } else {
+      setState(() {
+        loading = true;
+        error = null;
+      });
+    }
     try {
       final response = await repository.getPopularCharacters(page: target);
       if (!mounted) return;
