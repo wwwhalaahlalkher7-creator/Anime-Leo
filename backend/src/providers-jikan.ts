@@ -1,4 +1,4 @@
-import type { AnimeProvider, AnimeRecord, EpisodeRecord, ProviderPage } from './types';
+import type { AnimeCharacter, AnimeProvider, AnimeRecord, AnimeRelation, AnimeRecommendation, EpisodeRecord, ProviderPage } from './types';
 import { identityFromProvider } from './identity';
 
 interface JikanResponse {
@@ -42,7 +42,67 @@ function genresFrom(raw: Record<string, unknown>): string[] {
     .filter((x): x is string => Boolean(x));
 }
 
-function normalizeAnime(raw: unknown): AnimeRecord | null {
+function studiosFrom(raw: Record<string, unknown>): string[] {
+  const studios = Array.isArray(raw.studios) ? raw.studios : [];
+  return studios
+    .map(asMap)
+    .filter((x): x is Record<string, unknown> => x !== null)
+    .map((x) => asString(x.name))
+    .filter((x): x is string => Boolean(x));
+}
+
+function trailerFrom(raw: Record<string, unknown>): { url: string | null; image: string | null } {
+  const trailer = asMap(raw.trailer);
+  if (!trailer) return { url: null, image: null };
+  const images = asMap(trailer.images);
+  return {
+    url: asString(trailer.url) || asString(trailer.embed_url),
+    image: asString(images?.maximum_image_url) || asString(images?.large_image_url) || asString(images?.image_url),
+  };
+}
+
+function charactersFrom(raw: Record<string, unknown>): AnimeCharacter[] {
+  const characters = Array.isArray(raw.characters) ? raw.characters : [];
+  return characters.slice(0, 24).map(asMap).filter((x): x is Record<string, unknown> => x !== null).map((x) => {
+    const character = asMap(x.character);
+    const images = character ? asMap(character.images) : null;
+    const jpg = images ? asMap(images.jpg) : null;
+    return {
+      id: asInt(character?.mal_id) ?? 0,
+      name: asString(character?.name) || 'Unknown',
+      imageUrl: asString(jpg?.image_url) || asString(jpg?.large_image_url),
+      role: asString(x.role),
+    };
+  }).filter((x) => x.id > 0);
+}
+
+function relationsFrom(raw: Record<string, unknown>): AnimeRelation[] {
+  const relations = Array.isArray(raw.relations) ? raw.relations : [];
+  return relations.map(asMap).filter((x): x is Record<string, unknown> => x !== null).map((x) => ({
+    relation: asString(x.relation) || 'Related',
+    entries: (Array.isArray(x.entry) ? x.entry : []).map(asMap).filter((e): e is Record<string, unknown> => e !== null).map((e) => ({
+      id: asInt(e.mal_id) ?? 0,
+      title: asString(e.name) || 'Unknown',
+      type: asString(e.type),
+    })).filter((e) => e.id > 0),
+  })).filter((x) => x.entries.length > 0);
+}
+
+function recommendationsFrom(raw: Record<string, unknown>): AnimeRecommendation[] {
+  const rows = Array.isArray(raw.recommendations) ? raw.recommendations : [];
+  return rows.slice(0, 12).map(asMap).filter((x): x is Record<string, unknown> => x !== null).map((x) => {
+    const entry = asMap(x.entry);
+    const images = asMap(entry?.images);
+    const jpg = images ? asMap(images.jpg) : null;
+    return {
+      id: asInt(entry?.mal_id) ?? 0,
+      title: asString(entry?.title) || 'Unknown',
+      imageUrl: asString(jpg?.large_image_url) || asString(jpg?.image_url),
+    };
+  }).filter((x) => x.id > 0);
+}
+
+export function normalizeAnime(raw: unknown): AnimeRecord | null {
   const map = asMap(raw);
   const externalId = asInt(map?.mal_id);
   if (externalId == null || !map) return null;
@@ -61,6 +121,25 @@ function normalizeAnime(raw: unknown): AnimeRecord | null {
     score: asNumber(map.score),
     year: asInt(map.year),
     type: asString(map.type),
+    source: asString(map.source),
+    duration: asString(map.duration),
+    airedFrom: asString(asMap(map.aired)?.from),
+    airedTo: asString(asMap(map.aired)?.to),
+    rating: asString(map.rating),
+    rank: asInt(map.rank),
+    members: asInt(map.members),
+    popularity: asInt(map.popularity),
+    season: asString(map.season),
+    seasonYear: asInt(map.year),
+    broadcastDay: asString(asMap(map.broadcast)?.day),
+    broadcastTime: asString(asMap(map.broadcast)?.time),
+    studioNames: studiosFrom(map),
+    trailerUrl: trailerFrom(map).url,
+    trailerImageUrl: trailerFrom(map).image,
+    backgroundImageUrl: asString(map.background_image),
+    characters: charactersFrom(map),
+    relations: relationsFrom(map),
+    recommendations: recommendationsFrom(map),
   };
 }
 
@@ -161,8 +240,19 @@ export class JikanProvider implements AnimeProvider {
   }
 
   async details(externalId: string): Promise<AnimeRecord | null> {
-    const response = await this.get(`/anime/${encodeURIComponent(externalId)}`);
+    const response = await this.get(`/anime/${encodeURIComponent(externalId)}/full`);
     return normalizeAnime(response.data);
+  }
+
+  async schedule(day: string): Promise<AnimeRecord[]> {
+    const safeDay = day.trim().toLowerCase();
+    const response = await this.get(`/schedules/${encodeURIComponent(safeDay)}`, {
+      sfw: 'true',
+      filter: 'airing',
+    });
+    return Array.isArray(response.data)
+      ? response.data.map(normalizeAnime).filter((x): x is AnimeRecord => x !== null)
+      : [];
   }
 
   async episodes(externalId: string, page: number, limit: number): Promise<ProviderPage<EpisodeRecord>> {

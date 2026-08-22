@@ -5,6 +5,7 @@ import '../core/config.dart';
 import '../core/link_launcher.dart';
 import '../core/theme_controller.dart';
 import '../screens/coming_soon_screen.dart';
+import '../screens/episode_schedule_screen.dart';
 import '../screens/downloads_screen.dart';
 import '../screens/seasons_screen.dart';
 import '../screens/settings_screen.dart';
@@ -73,6 +74,16 @@ class AppDrawer extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => SeasonsScreen(state: state, analytics: analytics),
+      ),
+    );
+  }
+
+  void _openEpisodeSchedule(BuildContext context) {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EpisodeScheduleScreen(state: state, analytics: analytics),
       ),
     );
   }
@@ -210,7 +221,7 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.event_note_outlined,
               labelAr: 'جدول الحلقات',
               labelEn: 'Episode Schedule',
-              onTap: () => _openPlaceholder(context, titleAr: 'جدول الحلقات', titleEn: 'Episode Schedule', icon: Icons.event_note_outlined),
+              onTap: () => _openEpisodeSchedule(context),
             ),
             _item(
               context,

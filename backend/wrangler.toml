@@ -6,7 +6,7 @@ workers_dev = true
 [vars]
 UPSTREAM_BASE = "https://api.jikan.moe/v4"
 CACHE_SECONDS = "900"
-APP_VERSION = "1.30.0.18"
+APP_VERSION = "1.32.0.20"
 MINIMUM_APP_VERSION = "1.9.0"
 ANALYTICS_ENABLED = "false"
 MAINTENANCE_MODE = "false"

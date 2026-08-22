@@ -12,6 +12,7 @@ const checks = [
   ['/health?deep=true', [200, 503]],
   ['/top/anime?page=1&limit=3', [200]],
   ['/anime?q=naruto&page=1&limit=3', [200]],
+  ['/anime/20', [200]],
   ['/anime/20/full', [200]],
   ['/anime/20/episodes?page=1&limit=3', [200, 503]],
   ['/manga?page=1&limit=3', [200, 502, 503]],

@@ -28,6 +28,20 @@ class AnimeEpisodesPage {
   });
 }
 
+class EpisodeScheduleItem {
+  final Anime anime;
+  final String day;
+  final String? time;
+  final bool airing;
+
+  const EpisodeScheduleItem({
+    required this.anime,
+    required this.day,
+    this.time,
+    required this.airing,
+  });
+}
+
 class SeasonYear {
   final int year;
   final int count;
@@ -76,6 +90,25 @@ class AnimeRepository {
       year: (json['year'] as num?)?.toInt(),
       type: json['type']?.toString(),
       episodes: (json['episodes'] as num?)?.toInt(),
+      source: json['source']?.toString(),
+      duration: json['duration']?.toString(),
+      airedFrom: json['airedFrom']?.toString() ?? json['aired_from']?.toString(),
+      airedTo: json['airedTo']?.toString() ?? json['aired_to']?.toString(),
+      rating: json['rating']?.toString(),
+      rank: (json['rank'] as num?)?.toInt(),
+      members: (json['members'] as num?)?.toInt(),
+      popularity: (json['popularity'] as num?)?.toInt(),
+      season: json['season']?.toString(),
+      seasonYear: (json['seasonYear'] as num?)?.toInt(),
+      broadcastDay: json['broadcastDay']?.toString(),
+      broadcastTime: json['broadcastTime']?.toString(),
+      studioNames: (json['studioNames'] is List) ? (json['studioNames'] as List).map((e) => e.toString()).toList() : const [],
+      trailerUrl: json['trailerUrl']?.toString(),
+      trailerImageUrl: json['trailerImageUrl']?.toString(),
+      backgroundImageUrl: json['backgroundImageUrl']?.toString(),
+      characters: Anime.parseCharacters(json['characters']),
+      relations: Anime.parseRelations(json['relations']),
+      recommendations: Anime.parseRecommendations(json['recommendations']),
     );
   }
 
@@ -190,6 +223,36 @@ class AnimeRepository {
       }
       rethrow;
     }
+  }
+
+  Future<List<EpisodeScheduleItem>> getEpisodeSchedule({required String day}) async {
+    final key = 'episode_schedule_$day';
+    final cached = await cache.read(key, maxAge: const Duration(minutes: 10));
+    Map<String, dynamic>? response = cached;
+
+    try {
+      response = await api.episodeSchedule(day: day);
+      await cache.write(key, response);
+    } catch (_) {
+      response = cached;
+      if (response == null) rethrow;
+    }
+
+    final data = response['data'];
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map((raw) {
+          final json = Map<String, dynamic>.from(raw);
+          return EpisodeScheduleItem(
+            anime: _mapAnime(json),
+            day: json['scheduleDay']?.toString() ?? day,
+            time: json['broadcastTime']?.toString(),
+            airing: json['airing'] == true,
+          );
+        })
+        .where((item) => item.anime.id != 0)
+        .toList();
   }
 
   Future<AnimePage> getComingSoon({int page = 1, int limit = 24}) async {

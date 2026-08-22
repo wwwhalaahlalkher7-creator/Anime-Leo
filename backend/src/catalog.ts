@@ -136,6 +136,10 @@ function rowToAnime(row: Record<string, unknown>): AnimeRecord {
     score: row.score == null ? null : Number(row.score),
     year: row.year == null ? null : Number(row.year),
     type: row.type == null ? null : String(row.type),
+    studioNames: [],
+    characters: [],
+    relations: [],
+    recommendations: [],
   };
 }
 
@@ -644,6 +648,25 @@ export function animeToApi(item: AnimeRecord) {
     score: item.score,
     year: item.year,
     type: item.type,
+    source: item.source,
+    duration: item.duration,
+    airedFrom: item.airedFrom,
+    airedTo: item.airedTo,
+    rating: item.rating,
+    rank: item.rank,
+    members: item.members,
+    popularity: item.popularity,
+    season: item.season,
+    seasonYear: item.seasonYear,
+    broadcastDay: item.broadcastDay,
+    broadcastTime: item.broadcastTime,
+    studioNames: item.studioNames ?? [],
+    trailerUrl: item.trailerUrl,
+    trailerImageUrl: item.trailerImageUrl,
+    backgroundImageUrl: item.backgroundImageUrl,
+    characters: item.characters ?? [],
+    relations: item.relations ?? [],
+    recommendations: item.recommendations ?? [],
   };
 }
 

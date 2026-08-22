@@ -50,3 +50,7 @@ V1.30.0+17 Provider Aggregator:
 - Merges episode metadata by episode number and deduplicates provider sources.
 - Added /api/providers health/aggregation diagnostics.
 - Keeps playback behind the licensed-provider contract; no unofficial provider was enabled by this change.
+
+## v1.32.0+20
+- Live episode schedule sidebar screen.
+- Jikan broadcast schedule endpoint.

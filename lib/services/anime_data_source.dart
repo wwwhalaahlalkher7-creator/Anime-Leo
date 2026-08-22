@@ -18,6 +18,8 @@ abstract class AnimeDataSource {
   /// Upcoming/unaired titles for the sidebar's "Coming Soon" item (see
   /// docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8).
   Future<Map<String, dynamic>> comingSoon({int page = 1, int limit = 24});
+  Future<Map<String, dynamic>> episodeSchedule({required String day});
+
 
   /// Distinct broadcast years in the catalog, for the sidebar's "Seasons"
   /// item (see docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8).

@@ -739,8 +739,9 @@ export default {
       path === '/top/anime' ||
       path === '/anime' ||
       path === '/anime/coming-soon' ||
+      path === '/anime/schedule' ||
       path === '/anime/seasons' ||
-      /^\/anime\/-?\d+\/full$/.test(path) ||
+      /^\/anime\/-?\d+(?:\/full)?$/.test(path) ||
       /^\/anime\/-?\d+\/episodes$/.test(path);
 
     if (maintenance && isCatalogRead) {
@@ -805,6 +806,24 @@ export default {
           source: result.source,
           degraded: result.degraded === true,
         };
+      } else if (path === '/anime/schedule') {
+        const allowedDays = new Set(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+        const day = (url.searchParams.get('day') || '').trim().toLowerCase();
+        if (!allowedDays.has(day)) return json({ error: 'invalid_day', message: 'day must be monday..sunday' }, 400, {}, id);
+
+        const scheduleProvider = new JikanProvider(env.UPSTREAM_BASE);
+        const items = await scheduleProvider.schedule(day);
+        payload = {
+          data: items.map(animeToApi).map((item) => ({
+            ...item,
+            scheduleDay: day,
+            airing: true,
+            scheduleStatus: 'scheduled',
+          })),
+          day,
+          source: 'provider',
+          degraded: false,
+        };
       } else if (path === '/anime/coming-soon') {
         const result = await comingSoonCatalog(env.DB, page, limit);
         payload = {
@@ -832,7 +851,7 @@ export default {
           };
         }
       } else {
-        const detailsMatch = path.match(/^\/anime\/(\-?\d+)\/full$/);
+        const detailsMatch = path.match(/^\/anime\/(\-?\d+)(?:\/full)?$/);
         const episodesMatch = path.match(/^\/anime\/(\-?\d+)\/episodes$/);
         const videoMatch = path.match(/^\/anime\/(\-?\d+)\/episodes\/(\d+)\/video$/);
 

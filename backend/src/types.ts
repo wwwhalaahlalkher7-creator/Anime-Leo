@@ -1,3 +1,21 @@
+export interface AnimeCharacter {
+  id: number;
+  name: string;
+  imageUrl?: string | null;
+  role?: string | null;
+}
+
+export interface AnimeRelation {
+  relation: string;
+  entries: Array<{ id: number; title: string; type?: string | null }>;
+}
+
+export interface AnimeRecommendation {
+  id: number;
+  title: string;
+  imageUrl?: string | null;
+}
+
 export interface AnimeRecord {
   id?: number;
   /** Stable app identity. Provider IDs remain separate and are never overloaded. */
@@ -20,6 +38,25 @@ export interface AnimeRecord {
   score?: number | null;
   year?: number | null;
   type?: string | null;
+  source?: string | null;
+  duration?: string | null;
+  airedFrom?: string | null;
+  airedTo?: string | null;
+  rating?: string | null;
+  rank?: number | null;
+  members?: number | null;
+  popularity?: number | null;
+  season?: string | null;
+  seasonYear?: number | null;
+  broadcastDay?: string | null;
+  broadcastTime?: string | null;
+  studioNames?: string[];
+  trailerUrl?: string | null;
+  trailerImageUrl?: string | null;
+  backgroundImageUrl?: string | null;
+  characters?: AnimeCharacter[];
+  relations?: AnimeRelation[];
+  recommendations?: AnimeRecommendation[];
 }
 
 export interface EpisodeSource {
