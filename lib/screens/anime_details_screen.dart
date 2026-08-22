@@ -403,7 +403,7 @@ class _HeroSummary extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: CachedAnimeImage(url: anime.image, width: 92, height: 136, fit: BoxFit.cover),
+            child: SizedBox(width: 92, height: 136, child: CachedAnimeImage(url: anime.image, fit: BoxFit.cover)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -799,5 +799,5 @@ class _EmptyFeature extends StatelessWidget {
 class _EpisodeLoading extends StatelessWidget {
   const _EpisodeLoading();
   @override
-  Widget build(BuildContext context) => Column(children: List.generate(4, (_) => const Card(child: ListTile(leading: CircleAvatar(child: SizedBox(width: 10, height: 10)), title: SizedBox(height: 12, child: LinearProgressIndicator()), subtitle: SizedBox(height: 10))));
+  Widget build(BuildContext context) => Column(children: List.generate(4, (_) => const Card(child: ListTile(leading: CircleAvatar(child: SizedBox(width: 10, height: 10)), title: SizedBox(height: 12, child: LinearProgressIndicator()), subtitle: SizedBox(height: 10)))));
 }
