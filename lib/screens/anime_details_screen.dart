@@ -12,6 +12,7 @@ import '../widgets/ui_states.dart';
 import '../core/link_launcher.dart';
 import 'player_screen.dart';
 import 'downloads_screen.dart';
+import 'character_details_screen.dart';
 
 class AnimeDetailsScreen extends StatefulWidget {
   final Anime anime;
@@ -285,7 +286,7 @@ class _AnimeDetailsScreenState extends State<AnimeDetailsScreen> {
   }
 
   Widget _buildTabContent(Anime anime) {
-    if (_selectedTab == 0) return _CharacterSection(characters: anime.characters);
+    if (_selectedTab == 0) return _CharacterSection(characters: anime.characters, onCharacter: (character) => Navigator.push(context, MaterialPageRoute(builder: (_) => CharacterDetailsScreen(characterId: character.id, state: widget.state, analytics: widget.analytics))));
     if (_selectedTab == 1) return _RelatedSection(relations: anime.relations);
     return _RecommendationsSection(items: anime.recommendations);
   }
@@ -654,7 +655,8 @@ class _Tab extends StatelessWidget {
 
 class _CharacterSection extends StatelessWidget {
   final List<AnimeCharacter> characters;
-  const _CharacterSection({required this.characters});
+  final ValueChanged<AnimeCharacter> onCharacter;
+  const _CharacterSection({required this.characters, required this.onCharacter});
   @override
   Widget build(BuildContext context) {
     if (characters.isEmpty) return const _EmptyFeature(title: 'الشخصيات', message: 'بيانات الشخصيات غير متاحة حاليًا.');
@@ -663,11 +665,11 @@ class _CharacterSection extends StatelessWidget {
       const SizedBox(height: 10),
       SizedBox(height: 156, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: characters.length, separatorBuilder: (_, __) => const SizedBox(width: 10), itemBuilder: (_, i) {
         final c = characters[i];
-        return SizedBox(width: 108, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        return InkWell(onTap: () => onCharacter(c), borderRadius: BorderRadius.circular(14), child: SizedBox(width: 108, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(14), child: c.imageUrl?.isNotEmpty == true ? CachedAnimeImage(url: c.imageUrl!, fit: BoxFit.cover) : Container(color: Theme.of(context).colorScheme.surfaceContainerHighest, child: const Icon(Icons.person, size: 36)))),
           const SizedBox(height: 6), Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
           if (c.role != null) Text(c.role!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-        ]));
+        ])));
       })),
     ]);
   }

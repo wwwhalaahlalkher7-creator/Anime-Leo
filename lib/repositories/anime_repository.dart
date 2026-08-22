@@ -1,4 +1,5 @@
 import '../models/anime.dart';
+import '../models/character.dart';
 import '../services/anime_api_service.dart';
 import '../services/anime_data_source.dart';
 import '../services/api_cache.dart';
@@ -238,6 +239,7 @@ class AnimeRepository {
       if (response == null) rethrow;
     }
 
+    if (response == null) return const [];
     final data = response['data'];
     if (data is! List) return const [];
     return data
@@ -253,6 +255,38 @@ class AnimeRepository {
         })
         .where((item) => item.anime.id != 0)
         .toList();
+  }
+
+  Future<List<PopularCharacter>> getPopularCharacters({int page = 1, int limit = 24}) async {
+    final key = 'characters_popular_${page}_$limit';
+    final cached = await cache.read(key, maxAge: const Duration(hours: 6));
+    Map<String, dynamic>? response = cached;
+    try {
+      response = await api.popularCharacters(page: page, limit: limit);
+      await cache.write(key, response);
+    } catch (_) {
+      if (response == null) rethrow;
+    }
+    if (response == null) return const [];
+    final data = response['data'];
+    if (data is! List) return const [];
+    return data.whereType<Map>().map((e) => PopularCharacter.fromJson(Map<String, dynamic>.from(e))).where((e) => e.id > 0).toList();
+  }
+
+  Future<CharacterDetails> getCharacterDetails(int id) async {
+    final key = 'character_details_$id';
+    final cached = await cache.read(key, maxAge: const Duration(days: 1));
+    try {
+      final response = await api.characterDetails(id);
+      final data = response['data'];
+      if (data is! Map) throw const AnimeApiException('تعذر قراءة تفاصيل الشخصية.');
+      final mapped = Map<String, dynamic>.from(data);
+      await cache.write(key, mapped);
+      return CharacterDetails.fromJson(mapped);
+    } catch (_) {
+      if (cached != null) return CharacterDetails.fromJson(cached);
+      rethrow;
+    }
   }
 
   Future<AnimePage> getComingSoon({int page = 1, int limit = 24}) async {

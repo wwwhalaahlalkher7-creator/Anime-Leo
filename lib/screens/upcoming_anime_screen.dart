@@ -5,7 +5,8 @@ import '../models/anime.dart';
 import '../repositories/anime_repository.dart';
 import '../services/analytics_service.dart';
 import '../services/remote_config_service.dart';
-import '../widgets/anime_card.dart';
+import '../widgets/cached_anime_image.dart';
+import '../screens/anime_details_screen.dart';
 import '../widgets/ui_states.dart';
 
 /// Real screen for the sidebar's "Coming Soon" item — upcoming/unaired
@@ -160,12 +161,8 @@ class _UpcomingAnimeScreenState extends State<UpcomingAnimeScreen> {
                         if (i >= results.length) {
                           return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                         }
-                        return AnimeCard(
-                          anime: results[i],
-                          state: widget.state,
-                          remoteConfig: RemoteConfig.disabled,
-                          analytics: widget.analytics,
-                        );
+                        final anime = results[i];
+                        return _UpcomingCard(anime: anime, state: widget.state, analytics: widget.analytics);
                       },
                       childCount: results.length + (loadingMore ? 3 : 0),
                     ),
@@ -196,4 +193,33 @@ class _UpcomingAnimeScreenState extends State<UpcomingAnimeScreen> {
       ),
     );
   }
+}
+
+
+class _UpcomingCard extends StatelessWidget {
+  final Anime anime;
+  final AppState state;
+  final AnalyticsService analytics;
+  const _UpcomingCard({required this.anime, required this.state, required this.analytics});
+  @override
+  Widget build(BuildContext context) {
+    final start = DateTime.tryParse(anime.airedFrom ?? '');
+    final hasTrailer = anime.trailerUrl?.isNotEmpty == true;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AnimeDetailsScreen(anime: anime, state: state, remoteConfig: RemoteConfig.disabled, analytics: analytics))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(16), child: Stack(fit: StackFit.expand, children: [
+          CachedAnimeImage(url: anime.image, fit: BoxFit.cover),
+          DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: .8)]))),
+          if (hasTrailer) const Positioned(top: 7, left: 7, child: CircleAvatar(radius: 15, backgroundColor: Colors.black54, child: Icon(Icons.play_arrow, color: Colors.white, size: 18))),
+          Positioned(left: 8, right: 8, bottom: 8, child: Text(anime.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, height: 1.05))),
+        ]))),
+        const SizedBox(height: 7),
+        Text(start != null ? '${AppLanguage.instance.text('الإصدار', 'Release')}: ${_date(start)}' : AppLanguage.instance.text('لم يحدد الموعد بعد', 'Release date TBA'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        if (anime.characters.isNotEmpty || hasTrailer) Text('${anime.characters.isNotEmpty ? '👥 ${anime.characters.length}' : ''}${anime.characters.isNotEmpty && hasTrailer ? '  •  ' : ''}${hasTrailer ? '▶ Trailer' : ''}', style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w700)),
+      ]),
+    );
+  }
+  String _date(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

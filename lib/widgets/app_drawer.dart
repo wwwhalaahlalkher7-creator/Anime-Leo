@@ -10,6 +10,7 @@ import '../screens/downloads_screen.dart';
 import '../screens/seasons_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/upcoming_anime_screen.dart';
+import '../screens/characters_screen.dart';
 import '../screens/local_lists_screen.dart';
 import '../services/analytics_service.dart';
 
@@ -76,6 +77,11 @@ class AppDrawer extends StatelessWidget {
         builder: (_) => SeasonsScreen(state: state, analytics: analytics),
       ),
     );
+  }
+
+  void _openCharacters(BuildContext context) {
+    Navigator.pop(context);
+    Navigator.push(context, MaterialPageRoute(builder: (_) => CharactersScreen(state: state, analytics: analytics)));
   }
 
   void _openEpisodeSchedule(BuildContext context) {
@@ -214,7 +220,7 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.groups_outlined,
               labelAr: 'الشخصيات',
               labelEn: 'Characters',
-              onTap: () => _openPlaceholder(context, titleAr: 'الشخصيات', titleEn: 'Characters', icon: Icons.groups_outlined),
+              onTap: () => _openCharacters(context),
             ),
             _item(
               context,

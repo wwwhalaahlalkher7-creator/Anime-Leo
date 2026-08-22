@@ -740,6 +740,8 @@ export default {
       path === '/anime' ||
       path === '/anime/coming-soon' ||
       path === '/anime/schedule' ||
+      path === '/characters/popular' ||
+      /^\/characters\/-?\d+\/full$/.test(path) ||
       path === '/anime/seasons' ||
       /^\/anime\/-?\d+(?:\/full)?$/.test(path) ||
       /^\/anime\/-?\d+\/episodes$/.test(path);
@@ -824,14 +826,92 @@ export default {
           source: 'provider',
           degraded: false,
         };
+      } else if (path === '/characters/popular') {
+        const characterPage = numberParam(url, 'page', 1, MAX_PAGE);
+        const characterLimit = limitParam(url);
+        const characterProvider = new JikanProvider(env.UPSTREAM_BASE);
+        const raw = await characterProvider.popularCharacters(characterPage, characterLimit);
+        payload = {
+          data: raw.map((item, index) => {
+            const images = item.images as Record<string, unknown> | undefined;
+            const jpg = images?.jpg as Record<string, unknown> | undefined;
+            return {
+              id: Number(item.mal_id) || 0,
+              name: String(item.name ?? 'Unknown'),
+              imageUrl: String(jpg?.large_image_url ?? jpg?.image_url ?? ''),
+              favorites: Number(item.favorites) || 0,
+              rank: (characterPage - 1) * characterLimit + index + 1,
+            };
+          }).filter((item) => item.id > 0),
+          pagination: { current_page: characterPage, has_next_page: raw.length >= characterLimit },
+          source: 'provider',
+          degraded: false,
+        };
+      } else if (/^\/characters\/-?\d+\/full$/.test(path)) {
+        const characterId = Number(path.split('/')[2]);
+        if (!Number.isFinite(characterId) || characterId <= 0) return json({ error: 'invalid_character_id' }, 400, {}, id);
+        const characterProvider = new JikanProvider(env.UPSTREAM_BASE);
+        const raw = await characterProvider.characterDetails(String(characterId));
+        if (!raw) return json({ error: 'not_found', message: 'بيانات الشخصية غير موجودة.' }, 404, {}, id);
+        const images = raw.images as Record<string, unknown> | undefined;
+        const jpg = images?.jpg as Record<string, unknown> | undefined;
+        const animeography = Array.isArray(raw.anime) ? raw.anime : [];
+        payload = {
+          data: {
+            id: characterId,
+            name: String(raw.name ?? 'Unknown'),
+            imageUrl: String(jpg?.large_image_url ?? jpg?.image_url ?? ''),
+            favorites: Number(raw.favorites) || 0,
+            about: raw.about == null ? null : String(raw.about),
+            anime: animeography.map((row) => {
+              const entry = row as Record<string, unknown>;
+              const anime = entry.anime as Record<string, unknown> | undefined;
+              const animeImages = anime?.images as Record<string, unknown> | undefined;
+              const animeJpg = animeImages?.jpg as Record<string, unknown> | undefined;
+              return {
+                id: Number(anime?.mal_id) || 0,
+                title: String(anime?.title ?? 'Unknown Anime'),
+                imageUrl: String(animeJpg?.large_image_url ?? animeJpg?.image_url ?? ''),
+                role: entry.role == null ? null : String(entry.role),
+              };
+            }).filter((item) => item.id > 0).slice(0, 30),
+          },
+          source: 'provider',
+          degraded: false,
+        };
       } else if (path === '/anime/coming-soon') {
         const result = await comingSoonCatalog(env.DB, page, limit);
-        payload = {
-          data: result.items.map(animeToApi),
-          pagination: { current_page: result.page, has_next_page: result.hasNextPage },
-          source: result.source,
-          degraded: result.degraded === true,
-        };
+        if (result.items.length > 0 || page > 1) {
+          payload = {
+            data: result.items.map(animeToApi),
+            pagination: { current_page: result.page, has_next_page: result.hasNextPage },
+            source: result.source,
+            degraded: result.degraded === true,
+          };
+        } else {
+          try {
+            const upcomingProvider = new JikanProvider(env.UPSTREAM_BASE);
+            const upcoming = await upcomingProvider.browse(page, limit, 'start_date', 'desc');
+            const unaired = upcoming.items.filter((item) => {
+              const aired = item.airedFrom ? Date.parse(item.airedFrom) : NaN;
+              const status = (item.status ?? '').toLowerCase();
+              return (Number.isNaN(aired) || aired > Date.now()) && (status.includes('not yet') || status.includes('upcoming'));
+            });
+            payload = {
+              data: unaired.map(animeToApi),
+              pagination: { current_page: page, has_next_page: upcoming.hasNextPage },
+              source: 'provider',
+              degraded: false,
+            };
+          } catch (_) {
+            payload = {
+              data: [],
+              pagination: { current_page: page, has_next_page: false },
+              source: 'database',
+              degraded: true,
+            };
+          }
+        }
       } else if (path === '/anime/seasons') {
         const yearParam = url.searchParams.get('year');
         if (!yearParam) {

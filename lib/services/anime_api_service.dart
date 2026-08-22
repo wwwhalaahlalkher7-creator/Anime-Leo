@@ -77,6 +77,14 @@ class AnimeApiService implements AnimeDataSource {
   Future<Map<String, dynamic>> episodeSchedule({required String day}) =>
       getJson('/anime/schedule', query: {'day': day});
 
+  @override
+  Future<Map<String, dynamic>> popularCharacters({int page = 1, int limit = 24}) =>
+      getJson('/characters/popular', query: {'page': '$page', 'limit': '$limit'});
+
+  @override
+  Future<Map<String, dynamic>> characterDetails(int id) =>
+      getJson('/characters/$id/full');
+
 
   @override
   Future<Map<String, dynamic>> seasonYears() => getJson('/anime/seasons');

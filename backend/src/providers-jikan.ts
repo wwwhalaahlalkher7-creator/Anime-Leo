@@ -244,6 +244,21 @@ export class JikanProvider implements AnimeProvider {
     return normalizeAnime(response.data);
   }
 
+  async popularCharacters(page: number, limit: number): Promise<Array<Record<string, unknown>>> {
+    const response = await this.get('/top/characters', {
+      page: String(page),
+      limit: String(Math.min(limit, 25)),
+    });
+    return Array.isArray(response.data)
+      ? response.data.map(asMap).filter((x): x is Record<string, unknown> => x !== null)
+      : [];
+  }
+
+  async characterDetails(id: string): Promise<Record<string, unknown> | null> {
+    const response = await this.get(`/characters/${encodeURIComponent(id)}/full`);
+    return asMap(response.data);
+  }
+
   async schedule(day: string): Promise<AnimeRecord[]> {
     const safeDay = day.trim().toLowerCase();
     const response = await this.get(`/schedules/${encodeURIComponent(safeDay)}`, {

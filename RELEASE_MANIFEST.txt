@@ -54,3 +54,11 @@ V1.30.0+17 Provider Aggregator:
 ## v1.32.0+20
 - Live episode schedule sidebar screen.
 - Jikan broadcast schedule endpoint.
+
+
+## v1.33.0+21
+- Replaced the sidebar Characters placeholder with a live Jikan-backed popular characters catalog.
+- Added character details and animeography, linked from the sidebar and anime details character tab.
+- Improved Coming Soon with live provider fallback for unaired titles when the local catalog has no rows.
+- Coming Soon cards now surface release date, character availability, and trailer availability when provided.
+- Added resilient empty/degraded states instead of indefinite loading placeholders.
