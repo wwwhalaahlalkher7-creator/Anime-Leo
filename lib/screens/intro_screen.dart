@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 import '../core/app_state.dart';
-import '../core/app_language.dart';
 import '../core/theme_controller.dart';
 import '../services/analytics_service.dart';
 import '../services/remote_config_service.dart';
@@ -34,7 +33,6 @@ class _IntroScreenState extends State<IntroScreen> {
   VideoPlayerController? _controller;
   bool _videoReady = false;
   bool _dataReady = false;
-  bool _imagesReady = false;
   bool _showLogo = false;
   bool _videoFinished = false;
   bool _logoHoldComplete = false;
@@ -93,7 +91,6 @@ class _IntroScreenState extends State<IntroScreen> {
       // Individual image failures must not block startup.
     }
     if (mounted) {
-      setState(() => _imagesReady = true);
       _goHome();
     }
   }
