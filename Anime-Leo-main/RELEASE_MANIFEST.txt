@@ -1,0 +1,24 @@
+Anime Leo Release Manifest
+
+Release: V1.24.0
+Mobile: 1.24.0+8
+API: v1
+
+Branding: Anime Leo icon and wordmark
+Legal video architecture: enabled
+Video playback: disabled
+Ads: disabled
+Analytics: disabled
+D1 schema: current through V1.24.0 migrations
+Backend catalog/provider architecture: current
+Termux role: upload/deployment only
+
+Analyzer cleanup:
+- Added curly braces to control-flow statements
+- Removed unused legacy HomeScreen helpers
+- Migrated RadioListTile groups to RadioGroup
+- Removed unused HomeScreen health future
+
+V1.25.3 update: TMDB animation catalog expanded with categories, pagination/load-more, and English external titles in both Arabic and English interfaces.
+
+V1.25.3: Expanded TMDB animation catalog, categories, pagination, and English external titles in both interfaces.

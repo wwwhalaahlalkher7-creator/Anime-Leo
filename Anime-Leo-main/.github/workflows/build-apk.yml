@@ -1,0 +1,225 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Generate Android platform files
+        run: flutter create --platforms=android --org com.animeleo .
+
+      - name: Set Anime Leo app identity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+
+          s = s.replace(
+              'android:label="anime_platform_mobile"',
+              'android:label="Anime Leo"'
+          )
+
+          p.write_text(s)
+          PY
+
+      - name: Enable Android internet permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+
+          permission = '    <uses-permission android:name="android.permission.INTERNET"/>'
+
+          if 'android.permission.INTERNET' not in s:
+              s = s.replace(
+                  '<application',
+                  permission + '\n    <application',
+                  1
+              )
+
+          p.write_text(s)
+          PY
+
+      # ---------------------------------------------------------
+      # Persistent release signing
+      # The keystore is reconstructed from GitHub Secrets.
+      # The keystore is NEVER committed to GitHub.
+      # ---------------------------------------------------------
+      - name: Configure persistent release signing
+        env:
+          ANIME_LEO_KEYSTORE_BASE64: ${{ secrets.ANIME_LEO_KEYSTORE_BASE64 }}
+          ANIME_LEO_KEYSTORE_PASSWORD: ${{ secrets.ANIME_LEO_KEYSTORE_PASSWORD }}
+          ANIME_LEO_KEY_ALIAS: ${{ secrets.ANIME_LEO_KEY_ALIAS }}
+          ANIME_LEO_KEY_PASSWORD: ${{ secrets.ANIME_LEO_KEY_PASSWORD }}
+
+        run: |
+          set -e
+
+          echo "Checking Android signing secrets..."
+
+          if [ -z "$ANIME_LEO_KEYSTORE_BASE64" ]; then
+            echo "ERROR: ANIME_LEO_KEYSTORE_BASE64 is missing."
+            exit 1
+          fi
+
+          if [ -z "$ANIME_LEO_KEYSTORE_PASSWORD" ]; then
+            echo "ERROR: ANIME_LEO_KEYSTORE_PASSWORD is missing."
+            exit 1
+          fi
+
+          if [ -z "$ANIME_LEO_KEY_ALIAS" ]; then
+            echo "ERROR: ANIME_LEO_KEY_ALIAS is missing."
+            exit 1
+          fi
+
+          if [ -z "$ANIME_LEO_KEY_PASSWORD" ]; then
+            echo "ERROR: ANIME_LEO_KEY_PASSWORD is missing."
+            exit 1
+          fi
+
+          echo "Recreating release keystore..."
+
+          echo "$ANIME_LEO_KEYSTORE_BASE64" | base64 --decode > android/app/anime-leo-release.jks
+
+          if [ ! -s android/app/anime-leo-release.jks ]; then
+            echo "ERROR: Keystore file was not created correctly."
+            exit 1
+          fi
+
+          echo "Creating Android signing configuration..."
+
+          cat > android/key.properties <<EOF
+          storePassword=$ANIME_LEO_KEYSTORE_PASSWORD
+          keyPassword=$ANIME_LEO_KEY_PASSWORD
+          keyAlias=$ANIME_LEO_KEY_ALIAS
+          storeFile=anime-leo-release.jks
+          EOF
+
+          echo "Configuring Gradle release signing..."
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle.kts")
+          s = p.read_text()
+
+          # Add required imports.
+          imports = """import java.util.Properties
+          import java.io.FileInputStream
+          """
+
+          if "import java.util.Properties" not in s:
+              s = imports + s
+
+          # Load key.properties.
+          block = """
+          val keystoreProperties = Properties()
+          val keystorePropertiesFile = rootProject.file("key.properties")
+
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+          }
+          """
+
+          if "val keystoreProperties = Properties()" not in s:
+              s = s.replace(
+                  "android {",
+                  block + "\nandroid {",
+                  1
+              )
+
+          # Create release signing configuration.
+          signing = """
+              signingConfigs {
+                  create("release") {
+                      keyAlias = keystoreProperties["keyAlias"] as String
+                      keyPassword = keystoreProperties["keyPassword"] as String
+                      storeFile = file(keystoreProperties["storeFile"] as String)
+                      storePassword = keystoreProperties["storePassword"] as String
+                  }
+              }
+          """
+
+          if 'create("release")' not in s:
+              s = s.replace(
+                  "    defaultConfig {",
+                  signing + "\n    defaultConfig {",
+                  1
+              )
+
+          # Make release use the persistent signing key.
+          s = s.replace(
+              'signingConfigs.getByName("debug")',
+              'signingConfigs.getByName("release")'
+          )
+
+          p.write_text(s)
+          PY
+
+          # Protect secrets and keystore from accidental commits.
+          printf '\nandroid/app/anime-leo-release.jks\nandroid/key.properties\n' >> android/.gitignore
+
+          echo "Release signing configured successfully."
+
+      - name: Remove generated Flutter test
+        run: rm -rf test
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate Anime Leo launcher icon
+        run: dart run flutter_launcher_icons
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build release APK
+        run: |
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=https://anime-leo.www-halaahlalkher7.workers.dev/api
+
+      - name: Verify APK
+        run: |
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK was not generated."
+            exit 1
+          fi
+
+          echo "APK generated successfully:"
+          ls -lh "$APK"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anime-leo-v1.24.0-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
