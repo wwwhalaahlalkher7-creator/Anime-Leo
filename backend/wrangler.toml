@@ -1,0 +1,43 @@
+name = "anime-platform-api"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+workers_dev = true
+
+[vars]
+UPSTREAM_BASE = "https://api.jikan.moe/v4"
+CACHE_SECONDS = "900"
+APP_VERSION = "1.25.2.0"
+MINIMUM_APP_VERSION = "1.9.0"
+ANALYTICS_ENABLED = "false"
+MAINTENANCE_MODE = "false"
+PROVIDER_RESILIENCE_ENABLED = "true"
+PROVIDER_ORDER = "jikan,anilist"
+ANILIST_BASE = "https://graphql.anilist.co"
+CATALOG_SYNC_ENABLED = "true"
+CATALOG_SYNC_PAGES = "5"
+CATALOG_SYNC_LIMIT = "24"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "anime-platform-db"
+database_id = "4268654f-1c22-49f0-9d71-32ca62c95051"
+migrations_dir = "migrations"
+migrations_pattern = "migrations/*/migration.sql"
+# Optional authorized Arabic episode API.
+# Leave unset until a licensed/authorized provider is available.
+# ARABIC_EPISODE_BASE = "https://your-authorized-provider.example/api"
+# ARABIC_EPISODE_PROVIDER_NAME = "arabic-provider"
+
+
+[triggers]
+crons = ["0 */6 * * *"]
+
+# Optional external episode-page source feed. Configure only with a source/feed the project is authorized to index.
+# EXTERNAL_SOURCE_BASE = "https://your-authorized-source.example/api"
+# EXTERNAL_SOURCE_PROVIDER_NAME = "authorized-source"
+# EXTERNAL_SOURCE_API_KEY = "..."
+
+# TMDB Bearer token/API key for the Arabic animation/cartoon catalog.
+# Configure this as a Cloudflare secret/variable before deploying if you want
+# the animation section to return live data.
+# TMDB_API_TOKEN = "..."
