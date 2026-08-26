@@ -27,7 +27,6 @@ class _MangaReaderScreenState extends State<MangaReaderScreen> {
         final pages = snapshot.data ?? [];
         if (pages.isEmpty) return Center(child: Text(AppLanguage.instance.text('لا توجد صفحات متاحة.', 'No pages are available.'), style: const TextStyle(color: Colors.white)));
         return ListView.builder(
-          scrollCacheExtent: const ScrollCacheExtent.pixels(900),
           itemCount: pages.length,
           itemBuilder: (_, i) => Padding(
             padding: const EdgeInsets.only(bottom: 2),
