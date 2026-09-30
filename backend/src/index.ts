@@ -2,7 +2,7 @@ import { CatalogDatabaseError, getAnime, getEpisodes, searchCatalog, topCatalog,
 import { JikanProvider } from './providers-jikan';
 import { AniListProvider } from './providers-anilist';
 import { ProviderManager } from './provider-manager';
-import type { AnimeRecord } from './types';
+import type { AnimeProvider, AnimeRecord } from './types';
 import { NoOpVideoProvider } from './video-provider';
 import { ConfiguredArabicEpisodeProvider, NoOpArabicEpisodeProvider } from './arabic-episode-provider';
 import { CATALOG_SEED_IDS, seedCatalog } from './catalog-seed';
@@ -20,6 +20,7 @@ interface Env {
   MINIMUM_APP_VERSION: string;
   PROVIDER_RESILIENCE_ENABLED: string;
   PROVIDER_ORDER?: string;
+  PROVIDER_TIMEOUT_MS?: string;
   ANALYTICS_ENABLED: string;
   MAINTENANCE_MODE: string;
   CATALOG_SEED_TOKEN?: string;
@@ -116,13 +117,14 @@ function provider(env: Env) {
     .map((name) => name.trim().toLowerCase())
     .filter(Boolean);
 
-  const providers = configured.flatMap((name) => {
+  const providers: AnimeProvider[] = configured.flatMap((name): AnimeProvider[] => {
     if (name === 'jikan') return [new JikanProvider(env.UPSTREAM_BASE)];
     if (name === 'anilist') return [new AniListProvider(env.ANILIST_BASE)];
     return [];
   });
 
-  return new ProviderManager(providers);
+  const timeoutMs = Number.parseInt(env.PROVIDER_TIMEOUT_MS || '8000', 10);
+  return new ProviderManager(providers, Number.isFinite(timeoutMs) ? timeoutMs : 8000);
 }
 
 async function hashKey(value: string): Promise<string> {

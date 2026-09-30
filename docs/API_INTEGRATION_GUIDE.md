@@ -1,126 +1,59 @@
-# Anime Leo — API Integration Guide
+# Anime Leo API Integration Guide
 
-## الهدف
+## Current boundary
 
-كل تكاملات Anime Leo يجب أن تمر من نقطة موحدة:
+Anime metadata currently uses this path:
 
 ```text
-Flutter
+Flutter AnimeRepository
   ↓
-ApiConfig.baseUrl
+AnimeApiService
   ↓
-Anime Leo Backend / Worker
-  ↓
-Provider adapters
-  ├─ Anime metadata
-  ├─ Episodes
-  ├─ Subtitles
-  └─ Authorized video
+Jikan API
 ```
 
-## 1. أين أضع Base URL؟
+Catalog-backed features use the Worker:
 
-في GitHub Actions:
+```text
+Flutter catalog services
+  ↓
+Cloudflare Worker API
+  ↓
+D1 / provider adapters
+```
+
+This split is intentional. It prevents an outage in the D1 catalog path from making the main anime metadata path unusable.
+
+## API base URL
+
+Pass the Worker URL at build time when building catalog-backed features:
 
 ```bash
 flutter build apk --release \
   --dart-define=API_BASE_URL=https://YOUR-WORKER.example.workers.dev/api
 ```
 
-وفي Flutter يتم قراءته من:
+Do not hard-code environment-specific URLs in screens.
 
-```text
-lib/config/api_config.dart
-```
+## Secrets
 
-لا تكرر عنوان الـ API داخل الشاشات.
+Never place provider credentials in Flutter or the APK. Keep secrets in Cloudflare Worker configuration.
 
-## 2. أين أضع مفاتيح APIs؟
+Examples include:
 
-**لا تضع أي secret داخل Flutter.**
+- `TMDB_API_TOKEN`
+- authorized episode/source provider credentials
 
-ضعه في Backend/Cloudflare Secrets أو environment variables.
+## Adding an integration
 
-أمثلة:
+1. Identify the owning boundary: direct mobile metadata or Worker-backed catalog.
+2. Add an adapter at that boundary.
+3. Normalize the response into Anime Leo models.
+4. Add the endpoint/contract only if the Worker owns the integration.
+5. Add error, timeout, and fallback handling.
+6. Update the relevant repository/service.
+7. Run `flutter analyze`, `flutter test`, and the backend smoke tests.
 
-```text
-OPENSUBTITLES_API_KEY
-TMDB_API_TOKEN
-VIDEO_PROVIDER_API_KEY
-```
+## Video
 
-## 3. إضافة API جديد
-
-1. أنشئ Adapter داخل Backend.
-2. اجعل الـ Adapter يتعامل مع المصدر الخارجي.
-3. حوّل الاستجابة إلى نموذج Anime Leo الموحد.
-4. أضف endpoint للـ Worker.
-5. اختبر endpoint بـ curl.
-6. أضف method إلى `AnimeApiService`.
-7. أضف/حدّث model.
-8. اربطه بالواجهة.
-9. شغّل `flutter analyze` و`flutter test`.
-
-## 4. الترجمة
-
-الطبقة المستهدفة:
-
-```text
-Episode
- ↓
-Subtitle Provider
- ├─ English
- ├─ Japanese
- └─ Arabic
-```
-
-يمكن استخدام OpenSubtitles كموفر ترجمة، بشرط الالتزام بشروطه ووضع credentials في الـ Backend فقط.
-
-## 5. الفيديو
-
-لا نضع روابط بث غير مصرح بها داخل التطبيق.
-
-الـ Backend يجب أن يتعامل مع **مصدر فيديو مصرح به** ويعيد صيغة موحدة:
-
-```json
-{
-  "streamUrl": "...",
-  "type": "hls",
-  "quality": "1080p",
-  "subtitles": []
-}
-```
-
-## 6. أوامر البناء
-
-مثال:
-
-```bash
-flutter pub get
-flutter analyze
-flutter test
-flutter build apk --release   --dart-define=API_BASE_URL=https://YOUR-WORKER.example.workers.dev/api
-```
-
-إذا احتجت إلى تفعيل Provider اختياري:
-
-```bash
---dart-define=ENABLE_OPENSUBTITLES=true
---dart-define=ENABLE_VIDEO_PROVIDER=true
-```
-
-## 7. اختبار API
-
-```bash
-curl -i https://YOUR-WORKER.example.workers.dev/api/health
-```
-
-ثم اختبر endpoints الفعلية الموجودة في Worker قبل ربط شاشة جديدة.
-
-## 8. قاعدة أمنية
-
-- لا API keys في Dart.
-- لا tokens في assets.
-- لا secrets في Git.
-- لا روابط مصادر غير مصرح بها.
-- الـ Worker هو طبقة التكامل والتحكم.
+Video playback remains disabled until an authorized provider is available. The backend must not scrape, bypass access controls, proxy, or redistribute unauthorized streams.

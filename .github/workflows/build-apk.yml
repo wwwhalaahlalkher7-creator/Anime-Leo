@@ -221,5 +221,5 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: anime-leo-v1.24.0-apk
+          name: anime-leo-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk

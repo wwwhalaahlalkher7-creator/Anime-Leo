@@ -3,7 +3,7 @@ import '../core/app_language.dart';
 import '../widgets/ui_states.dart';
 
 /// Generic placeholder for sidebar destinations that don't have a real
-/// screen/backend yet (see docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8).
+/// screen/backend yet (see current app settings architecture).
 /// Keeps navigation from dead-ending while each item's real screen is built.
 class ComingSoonScreen extends StatelessWidget {
   final String titleAr;

@@ -9,7 +9,7 @@ import '../widgets/anime_card.dart';
 import '../widgets/ui_states.dart';
 
 /// Real screen for the sidebar's "Coming Soon" item — upcoming/unaired
-/// titles (see docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8). A paginated,
+/// titles (see current app settings architecture). A paginated,
 /// database-backed view over the existing catalog, styled the same as
 /// [SearchScreen]'s result grid.
 class UpcomingAnimeScreen extends StatefulWidget {

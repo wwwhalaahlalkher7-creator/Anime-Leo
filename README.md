@@ -1,38 +1,49 @@
 # Anime Leo
 
-Flutter Android client for the Anime Leo platform.
+Flutter Android client and Cloudflare Worker backend for Anime Leo.
 
-## Run
+## Current version
+
+`1.28.0-beta.1+15`
+
+The canonical version lives in `VERSION`. Run `./tool/sync_version.sh` after changing it to synchronize Flutter and Worker version metadata.
+
+## Architecture
+
+```text
+Flutter
+ ├─ Local state (favorites / watch history / settings)
+ ├─ Persistent API cache (stale-while-revalidate)
+ ├─ Jikan metadata client
+ └─ Manga / Animation catalog client
+          │
+          ▼
+Cloudflare Worker API
+ ├─ Edge cache + rate limiting
+ ├─ D1 catalog
+ ├─ Provider manager (Jikan → AniList fallback)
+ └─ Optional authorized content providers
+```
+
+Anime metadata currently uses Jikan directly from the Flutter client. The backend remains responsible for catalog-backed Manga/Animation features and optional authorized integrations.
+
+## Development
 
 ```bash
 flutter pub get
-flutter run
-```
-
-## Release build
-
-```bash
+flutter analyze
+flutter test
 flutter build apk --release
 ```
 
-The app uses the backend API layer by default and can fall back to cached data when available.
-Do not put API secrets in the mobile app.
-
-## Backend
-
-The `backend/` directory contains the Cloudflare Worker API and D1 migrations.
-
-The mobile client receives the backend URL at build time:
+For a production Worker endpoint:
 
 ```bash
 flutter build apk --release --dart-define=API_BASE_URL=https://YOUR-BACKEND/api
 ```
 
-## Current release — V1.24.0
+API secrets must remain in backend/Cloudflare configuration and must never be embedded in the APK.
 
-- Anime, Manga & Manhwa, and Animated Shows are available as the main content sections.
-- The top header remains pinned while scrolling.
-- Manga uses the Arabic-availability catalog from MangaDex.
-- Animated Shows use the Arabic-localized TMDB catalog when `TMDB_API_TOKEN` is configured in Cloudflare.
-- External-source pages are opened externally; the app does not proxy or redistribute third-party video.
-- Ads, analytics, and video playback remain disabled by default.
+## Backend
+
+See `backend/README.md` for Worker, D1, deployment, and smoke-test instructions.

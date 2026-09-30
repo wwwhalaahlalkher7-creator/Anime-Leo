@@ -30,8 +30,6 @@ class CatalogRepository {
       await cache.write(key, response);
       return _map(response, page);
     } catch (e) {
-      final stale = await cache.read(key, maxAge: const Duration(days: 7));
-      if (stale != null) return _map(stale, page);
       rethrow;
     }
   }

@@ -237,7 +237,7 @@ async function comingSoonDatabase(
 }
 
 /// Upcoming/unaired titles for the sidebar's "Coming Soon" item (see
-/// docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8). Database-only: this is a filtered
+/// current app settings architecture). Database-only: this is a filtered
 /// view of the catalog the background sync already fills in, not a new
 /// content type, so there's no provider fallback to wire here.
 export async function comingSoonCatalog(
@@ -256,7 +256,7 @@ export async function comingSoonCatalog(
 }
 
 /// Distinct broadcast years present in the catalog, most recent first, for
-/// the sidebar's "Seasons" item (see docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8).
+/// the sidebar's "Seasons" item (see current app settings architecture).
 /// The catalog only stores a `year`, not a quarter/season string, so
 /// "season" here means "year" — grouping by true broadcast season (winter/
 /// spring/...) would need a schema change and a provider that supplies it,

@@ -159,7 +159,7 @@ class _AnimeDetailsScreenState extends State<AnimeDetailsScreen> {
                       children: [
                         if (loadingDetails) const LinearProgressIndicator(minHeight: 2),
                         if (details.hasError && details.data == null)
-                          InlineNotice(warning: true, icon: Icons.cloud_off_outlined, text: 'تعذر تحديث التفاصيل. يتم عرض البيانات المتاحة من القائمة أو الذاكرة المؤقتة.'),
+                          InlineNotice(warning: true, icon: Icons.cloud_off_outlined, text: 'فشل تحديث التفاصيل. السبب: ${details.error}'),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -213,13 +213,13 @@ class _AnimeDetailsScreenState extends State<AnimeDetailsScreen> {
                               episodePage = snapshot.data!.page;
                             }
                             if (snapshot.hasError && episodes.isEmpty) {
-                              return UiStateCard(icon: Icons.playlist_remove, title: 'تعذر تحميل الحلقات', message: 'قد تكون الحلقات غير متاحة مؤقتًا. يمكنك المحاولة مرة أخرى.', actionLabel: 'إعادة المحاولة', onAction: () => setState(() { episodesFuture = repository.getEpisodes(widget.anime.id); episodesError = null; }));
+                              return UiStateCard(icon: Icons.playlist_remove, title: 'تعذر تحميل الحلقات', message: 'السبب: ${snapshot.error}\n\nإذا تكرر الخطأ، أرسل هذه الرسالة كاملة لتحديد مصدر المشكلة.', actionLabel: 'إعادة المحاولة', onAction: () => setState(() { episodesFuture = repository.getEpisodes(widget.anime.id); episodesError = null; }));
                             }
                             if (episodes.isEmpty) return UiStateCard(icon: Icons.video_library_outlined, title: AppLanguage.instance.text('لا توجد حلقات', 'No episodes'), message: 'لا توجد بيانات حلقات متاحة لهذا العنوان حاليًا.', compact: true);
                             return Column(
                               children: [
                                 ...episodes.map(_episodeTile),
-                                if (episodesError != null) InlineNotice(warning: true, icon: Icons.warning_amber_outlined, text: 'تعذر تحميل الصفحة التالية من الحلقات.'),
+                                if (episodesError != null) InlineNotice(warning: true, icon: Icons.warning_amber_outlined, text: 'تعذر تحميل الصفحة التالية من الحلقات. السبب: $episodesError'),
                                 if (episodesHasNext)
                                   SizedBox(
                                     width: double.infinity,

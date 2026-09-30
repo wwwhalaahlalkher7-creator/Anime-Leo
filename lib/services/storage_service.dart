@@ -22,14 +22,14 @@ class StoredHistory {
       );
 }
 
-/// Who receives new-episode alerts (Notifications section, Phase 4 UI).
+/// Who receives new-episode alerts (Notifications section, the current notification layer UI).
 enum EpisodeAlertScope { all, favoritesOnly, off }
 
-/// Which player launches by default (Player section, Phase 5 UI).
+/// Which player launches by default (Player section, the current player layer UI).
 enum PlayerPreference { askEveryTime, builtIn, external }
 
-/// Settings state for [AppSettings] — see docs/SETTINGS_SIDEBAR_PLAN.md,
-/// Phase 2. Account toggles aren't included: Phase 3 ships Account as a
+/// Settings state for [AppSettings] — see current app settings architecture,
+/// the current settings layer. Account toggles aren't included: the current account layer ships Account as a
 /// placeholder only, no visibility toggles yet.
 class StoredSettings {
   final EpisodeAlertScope episodeAlerts;

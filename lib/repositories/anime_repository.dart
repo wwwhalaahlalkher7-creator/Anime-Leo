@@ -45,27 +45,75 @@ class AnimeRepository {
   })  : api = api ?? AnimeApiService(),
         cache = cache ?? ApiCache();
 
+  final Set<String> _refreshingKeys = <String>{};
+
+  Future<Map<String, dynamic>?> _freshOrStale(
+    String key, {
+    required Duration maxAge,
+    required Future<Map<String, dynamic>> Function() refresh,
+  }) async {
+    final fresh = await cache.read(key, maxAge: maxAge);
+    if (fresh != null) return fresh;
+
+    final stale = await cache.readStale(key);
+    if (stale != null) {
+      _refreshInBackground(key, refresh);
+      return stale;
+    }
+    return null;
+  }
+
+  void _refreshInBackground(
+    String key,
+    Future<Map<String, dynamic>> Function() refresh,
+  ) {
+    if (!_refreshingKeys.add(key)) return;
+    Future<void>(() async {
+      try {
+        await cache.write(key, await refresh());
+      } catch (_) {
+        // Stale data remains usable; the next foreground request can retry.
+      } finally {
+        _refreshingKeys.remove(key);
+      }
+    });
+  }
+
   Anime _mapAnime(Map<String, dynamic> json) {
     final images = json['images'];
     final jpg = images is Map ? images['jpg'] : null;
     final rawId = json['id'] ?? json['mal_id'];
 
+    String? titleAr;
+    final titles = json['titles'];
+    if (titles is List) {
+      for (final raw in titles) {
+        if (raw is Map && raw['type']?.toString().toLowerCase() == 'arabic') {
+          titleAr = raw['title']?.toString();
+          break;
+        }
+      }
+    }
+
+    final rawGenres = json['genres'];
+    final genres = rawGenres is List
+        ? rawGenres.map((e) {
+            if (e is Map) return (e['name'] ?? e['title'] ?? '').toString();
+            return e.toString();
+          }).where((e) => e.trim().isNotEmpty).toList()
+        : const <String>[];
+
     return Anime(
       id: rawId is num ? rawId.toInt() : int.tryParse('$rawId') ?? 0,
       title: (json['title'] ?? 'Unknown Anime').toString(),
-      image: (json['image'] ??
-              json['image_url'] ??
-              (jpg is Map ? jpg['large_image_url'] ?? jpg['image_url'] : null))
-          ?.toString() ??
-          '',
-      titleAr: json['title_ar']?.toString() ?? json['titleAr']?.toString(),
+      image: (json['image'] ?? json['image_url'] ??
+              (jpg is Map ? jpg['large_image_url'] ?? jpg['image_url'] : null))?.toString() ?? '',
+      titleAr: json['title_ar']?.toString() ?? json['titleAr']?.toString() ?? titleAr,
       synopsis: json['synopsis']?.toString(),
-      genres: (json['genres'] is List)
-          ? (json['genres'] as List).map((e) => e.toString()).toList()
-          : const [],
+      genres: genres,
       status: json['status']?.toString(),
       score: (json['score'] as num?)?.toDouble(),
-      year: (json['year'] as num?)?.toInt(),
+      year: (json['year'] as num?)?.toInt() ?? ((json['aired'] is Map && json['aired']['from'] != null) ? DateTime.tryParse(json['aired']['from'].toString())?.year : null),
       type: json['type']?.toString(),
       episodes: (json['episodes'] as num?)?.toInt(),
     );
@@ -87,51 +135,25 @@ class AnimeRepository {
   }
 
   Future<List<Anime>> getTopAnime({bool forceRefresh = false}) async {
-    const key = 'top_anime_v4';
-
+    const key = 'top_anime_jikan_v2';
     if (!forceRefresh) {
-      final cached = await cache.read(
+      final cached = await _freshOrStale(
         key,
-        maxAge: const Duration(minutes: 15),
+        maxAge: const Duration(minutes: 10),
+        refresh: () => api.topAnime(page: 1),
       );
       if (cached != null) return _list(cached);
     }
 
-    try {
-      // Load several pages so the home catalog is no longer limited to a
-      // handful of seeded rows. The backend caches/upserts provider results.
-      final combined = <Map<String, dynamic>>[];
-      var hasNext = true;
-      for (var page = 1; page <= 6 && hasNext; page++) {
-        try {
-          final response = await api.topAnime(page: page);
-          combined.addAll(_list(response).map((a) => a.toJson()));
-          hasNext = _hasNext(response);
-        } catch (_) {
-          break;
-        }
-      }
-      // Remove duplicate IDs while preserving ranking order.
-      final seenIds = <int>{};
-      final unique = combined.where((item) {
-        final id = (item['id'] as num?)?.toInt() ?? 0;
-        return id != 0 && seenIds.add(id);
-      }).toList();
-
-      final merged = <String, dynamic>{
-        'data': unique,
-        'pagination': {'has_next_page': false, 'current_page': 1},
-      };
-      await cache.write(key, merged);
-      return _list(merged);
-    } catch (error) {
-      final stale = await cache.read(
-        key,
-        maxAge: const Duration(days: 7),
-      );
-      if (stale != null) return _list(stale);
-      rethrow;
+    // Jikan page 1 already returns up to 24 titles. The old D1 seed catalog
+    // was the source of the 15-title ceiling; there is no local catalog here.
+    final response = await api.topAnime(page: 1);
+    final items = _list(response);
+    if (items.isEmpty) {
+      throw const AnimeApiException('Jikan نجح في الاتصال لكنه أعاد 0 أنمي. السبب التشخيصي: data فارغة.');
     }
+    await cache.write(key, response);
+    return items;
   }
 
   Future<AnimePage> search(
@@ -142,9 +164,10 @@ class AnimeRepository {
     final normalized = query.trim().toLowerCase();
     final key = 'search_${Uri.encodeComponent(normalized)}_${page}_$limit';
 
-    final cached = await cache.read(
+    final cached = await _freshOrStale(
       key,
       maxAge: const Duration(minutes: 15),
+      refresh: () => api.searchAnime(normalized, page: page, limit: limit),
     );
     if (cached != null) {
       return AnimePage(
@@ -167,24 +190,17 @@ class AnimeRepository {
         hasNextPage: _hasNext(response),
       );
     } catch (_) {
-      final stale = await cache.read(
-        key,
-        maxAge: const Duration(days: 7),
-      );
-      if (stale != null) {
-        return AnimePage(
-          items: _list(stale),
-          page: page,
-          hasNextPage: _hasNext(stale),
-        );
-      }
       rethrow;
     }
   }
 
   Future<AnimePage> getComingSoon({int page = 1, int limit = 24}) async {
     final key = 'coming_soon_${page}_$limit';
-    final cached = await cache.read(key, maxAge: const Duration(minutes: 30));
+    final cached = await _freshOrStale(
+      key,
+      maxAge: const Duration(minutes: 30),
+      refresh: () => api.comingSoon(page: page, limit: limit),
+    );
     if (cached != null) {
       return AnimePage(
         items: _list(cached),
@@ -202,14 +218,6 @@ class AnimeRepository {
         hasNextPage: _hasNext(response),
       );
     } catch (_) {
-      final stale = await cache.read(key, maxAge: const Duration(days: 7));
-      if (stale != null) {
-        return AnimePage(
-          items: _list(stale),
-          page: page,
-          hasNextPage: _hasNext(stale),
-        );
-      }
       rethrow;
     }
   }
@@ -230,7 +238,11 @@ class AnimeRepository {
   Future<List<SeasonYear>> getSeasonYears({bool forceRefresh = false}) async {
     const key = 'season_years_v1';
     if (!forceRefresh) {
-      final cached = await cache.read(key, maxAge: const Duration(hours: 6));
+      final cached = await _freshOrStale(
+        key,
+        maxAge: const Duration(hours: 6),
+        refresh: () => api.seasonYears(),
+      );
       if (cached != null) return _seasonYears(cached);
     }
     try {
@@ -238,15 +250,17 @@ class AnimeRepository {
       await cache.write(key, response);
       return _seasonYears(response);
     } catch (_) {
-      final stale = await cache.read(key, maxAge: const Duration(days: 7));
-      if (stale != null) return _seasonYears(stale);
       rethrow;
     }
   }
 
   Future<AnimePage> getSeasonAnime(int year, {int page = 1, int limit = 24}) async {
     final key = 'season_${year}_${page}_$limit';
-    final cached = await cache.read(key, maxAge: const Duration(hours: 6));
+    final cached = await _freshOrStale(
+      key,
+      maxAge: const Duration(hours: 6),
+      refresh: () => api.seasonAnime(year, page: page, limit: limit),
+    );
     if (cached != null) {
       return AnimePage(
         items: _list(cached),
@@ -264,23 +278,25 @@ class AnimeRepository {
         hasNextPage: _hasNext(response),
       );
     } catch (_) {
-      final stale = await cache.read(key, maxAge: const Duration(days: 7));
-      if (stale != null) {
-        return AnimePage(
-          items: _list(stale),
-          page: page,
-          hasNextPage: _hasNext(stale),
-        );
-      }
       rethrow;
     }
   }
 
-  Future<Anime> getDetails(int id) async {    final key = 'details_$id';
-    final cached = await cache.read(
+  Future<Anime> getDetails(int id) async {
+    final key = 'details_$id';
+    final cached = await _freshOrStale(
       key,
       maxAge: const Duration(hours: 12),
+      refresh: () async {
+        final response = await api.animeDetails(id);
+        final data = response['data'];
+        if (data is! Map) throw const AnimeApiException('تعذر قراءة تفاصيل الأنمي.');
+        return Map<String, dynamic>.from(data);
+      },
     );
+    if (cached != null) {
+      return _mapAnime(cached);
+    }
 
     try {
       final response = await api.animeDetails(id);
@@ -294,7 +310,6 @@ class AnimeRepository {
       await cache.write(key, mapped);
       return _mapAnime(mapped);
     } catch (error) {
-      if (cached != null) return _mapAnime(cached);
       rethrow;
     }
   }
@@ -327,8 +342,6 @@ class AnimeRepository {
       await cache.write(key, response);
       return fromResponse(response);
     } catch (_) {
-      final stale = await cache.read(key, maxAge: const Duration(days: 7));
-      if (stale != null) return fromResponse(stale);
       rethrow;
     }
   }

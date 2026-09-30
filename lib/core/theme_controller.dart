@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// App theme mode: light, dark, or follow the OS ("system" — added Phase 6,
-/// see docs/SETTINGS_SIDEBAR_PLAN.md). Defaults to dark, matching the app's
+/// App theme mode: light, dark, or follow the OS ("system" — added the current theme layer,
+/// see current app settings architecture). Defaults to dark, matching the app's
 /// existing dark-first identity.
 class ThemeController extends ChangeNotifier {
   ThemeMode mode = ThemeMode.dark;

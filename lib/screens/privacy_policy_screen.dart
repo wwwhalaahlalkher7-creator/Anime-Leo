@@ -42,7 +42,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           _Section(
             titleAr: 'بيانات الأنمي',
             titleEn: 'Anime data',
-            bodyAr: 'عناوين الأنمي وصورها وتقييماتها تُجلب من خادم التطبيق، الذي بدوره يجلبها من مزودي بيانات تعريفية عامة (Jikan وAniList).',
+            bodyAr: 'عناوين الأنمي وصورها وتقييماتها تُجلب مباشرة من Jikan في النسخة الحالية، دون الاعتماد على قاعدة D1 الخاصة بالتطبيق.',
             bodyEn: 'Anime titles, artwork, and ratings are fetched from the app\'s backend, which in turn sources them from public metadata providers (Jikan and AniList).',
           ),
         ],

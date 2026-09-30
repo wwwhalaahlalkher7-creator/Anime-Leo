@@ -27,7 +27,7 @@ class _MangaChaptersScreenState extends State<MangaChaptersScreen> {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-        if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(AppLanguage.instance.text('تعذر تحميل الفصول العربية حاليًا.', 'Arabic chapters are currently unavailable.'), textAlign: TextAlign.center)));
+        if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(AppLanguage.instance.text('فشل تحميل الفصول العربية. السبب: ${snapshot.error}', 'Arabic chapters are currently unavailable.'), textAlign: TextAlign.center)));
         final chapters = snapshot.data ?? [];
         if (chapters.isEmpty) return Center(child: Text(AppLanguage.instance.text('لا توجد فصول عربية متاحة.', 'No Arabic chapters are available.')));
         return ListView.separated(

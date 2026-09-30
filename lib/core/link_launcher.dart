@@ -3,8 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'app_language.dart';
 
 /// Thin wrapper around `url_launcher`, used by the sidebar's Telegram item
-/// and the Settings > Other section (Phase 7, see
-/// docs/SETTINGS_SIDEBAR_PLAN.md). An unconfigured (empty) URL is treated as
+/// and the Settings > Other section (the current settings links, see
+/// current app settings architecture). An unconfigured (empty) URL is treated as
 /// "not set up yet" instead of attempting — and failing — a broken launch.
 class LinkLauncher {
   LinkLauncher._();

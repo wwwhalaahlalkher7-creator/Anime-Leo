@@ -9,7 +9,7 @@ import '../widgets/anime_card.dart';
 import '../widgets/ui_states.dart';
 
 /// Real screen for the sidebar's "Seasons" item (see
-/// docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8). The catalog only stores a
+/// current app settings architecture). The catalog only stores a
 /// broadcast `year` (no quarter/season string), so this groups by year: a
 /// row of year chips at the top, and a paginated grid of that year's titles
 /// below — same grid shape as [SearchScreen]/[UpcomingAnimeScreen].

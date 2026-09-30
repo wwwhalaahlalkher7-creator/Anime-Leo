@@ -41,8 +41,12 @@ class MangaApiService {
       'language': 'ar',
     });
     final response = await client.get(uri, headers: const {'Accept': 'application/json'}).timeout(const Duration(seconds: 20));
-    final decoded = jsonDecode(response.body);
-    if (response.statusCode != 200) throw Exception(decoded is Map ? decoded['message']?.toString() ?? 'تعذر تحميل الفصول.' : 'تعذر تحميل الفصول.');
+    dynamic decoded;
+    try { decoded = jsonDecode(response.body); } catch (e) { throw Exception('فشل تحميل الفصول: الرد ليس JSON صالحًا. السبب: ${e.runtimeType}'); }
+    if (response.statusCode != 200) {
+      final reason = decoded is Map ? (decoded['message']?.toString() ?? decoded['error']?.toString()) : null;
+      throw Exception('فشل تحميل الفصول: ${reason ?? 'الخادم لم يرسل سببًا واضحًا.'} • HTTP ${response.statusCode} • $uri');
+    }
     final data = decoded is Map ? decoded['data'] : null;
     return data is List ? data.whereType<Map>().map((e) => MangaChapter.fromJson(Map<String, dynamic>.from(e))).where((e) => e.id.isNotEmpty).toList() : [];
   }
@@ -50,8 +54,12 @@ class MangaApiService {
   Future<List<String>> pages(String chapterId) async {
     final uri = Uri.parse('$baseUrl/manga/chapter/${Uri.encodeComponent(chapterId)}');
     final response = await client.get(uri, headers: const {'Accept': 'application/json'}).timeout(const Duration(seconds: 20));
-    final decoded = jsonDecode(response.body);
-    if (response.statusCode != 200) throw Exception(decoded is Map ? decoded['message']?.toString() ?? 'تعذر تحميل الصفحات.' : 'تعذر تحميل الصفحات.');
+    dynamic decoded;
+    try { decoded = jsonDecode(response.body); } catch (e) { throw Exception('فشل تحميل صفحات الفصل: الرد ليس JSON صالحًا. السبب: ${e.runtimeType}'); }
+    if (response.statusCode != 200) {
+      final reason = decoded is Map ? (decoded['message']?.toString() ?? decoded['error']?.toString()) : null;
+      throw Exception('فشل تحميل صفحات الفصل: ${reason ?? 'الخادم لم يرسل سببًا واضحًا.'} • HTTP ${response.statusCode} • $uri');
+    }
     final pages = decoded is Map ? decoded['pages'] : null;
     return pages is List ? pages.map((e) => e.toString()).toList() : [];
   }

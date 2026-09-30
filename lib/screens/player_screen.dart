@@ -23,8 +23,8 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   // Only used when the Settings > Player preference is "ask every time" —
-  // the choice is per-visit, not persisted (see docs/SETTINGS_SIDEBAR_PLAN.md,
-  // Phase 5).
+  // the choice is per-visit, not persisted (see current app settings architecture,
+  // the current player layer).
   PlayerPreference? _sessionChoice;
 
   @override
@@ -95,7 +95,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  /// Respects the Settings > Player preference (Phase 5). Built-in playback
+  /// Respects the Settings > Player preference (the current player layer). Built-in playback
   /// works today; external playback still needs an Android intent/plugin
   /// dependency, so it's surfaced but not actually launched yet.
   Widget _readyContent(BuildContext context, VideoAsset asset) {

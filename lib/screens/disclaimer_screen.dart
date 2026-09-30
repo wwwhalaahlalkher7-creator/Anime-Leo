@@ -19,14 +19,8 @@ class DisclaimerScreen extends StatelessWidget {
           ),
           _Point(
             AppLanguage.instance.text(
-              'بنية تشغيل الفيديو في التطبيق مصمَّمة لعرض مصادر مرخّصة فقط عند ربطها؛ التطبيق لا يجلب أو يبث أي مصدر فيديو غير مصرح به.',
-              'The app\'s video-playback architecture is built to surface licensed sources only, once one is connected; the app does not fetch or stream any unauthorized video source.',
-            ),
-          ),
-          _Point(
-            AppLanguage.instance.text(
               'بيانات الأنمي (العناوين والصور والتقييمات) تُجلب من مزودي بيانات تعريفية عامة (Jikan وAniList) وتخضع لحقوقهم الخاصة.',
-              'Anime metadata (titles, artwork, ratings) is fetched from public metadata providers (Jikan and AniList) and remains subject to their own rights.',
+              'Anime metadata (titles, artwork, and ratings) is fetched directly from Jikan in the current build and remains subject to the provider\'s rights.',
             ),
           ),
           _Point(

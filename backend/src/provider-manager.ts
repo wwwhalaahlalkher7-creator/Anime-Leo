@@ -1,7 +1,6 @@
 import type { AnimeProvider, AnimeRecord, EpisodeRecord, ProviderPage } from './types';
 
 export interface ProviderAttempt<T> {
-  provider: AnimeProvider;
   operation: string;
   run: (provider: AnimeProvider) => Promise<T>;
 }
@@ -9,16 +8,18 @@ export interface ProviderAttempt<T> {
 /**
  * Coordinates metadata providers in priority order.
  *
- * V1.12 registers Jikan as the only currently implemented provider. The
- * manager is intentionally provider-agnostic so an authorized second
- * metadata provider can be added without changing catalog.ts or Flutter.
+ * Providers are intentionally isolated behind a common contract. Each
+ * operation has a bounded timeout so a slow provider cannot block the
+ * fallback chain indefinitely.
  */
 export class ProviderManager implements AnimeProvider {
   readonly name: string;
   private readonly providers: AnimeProvider[];
+  private readonly timeoutMs: number;
 
-  constructor(providers: AnimeProvider[]) {
+  constructor(providers: AnimeProvider[], timeoutMs = 8_000) {
     this.providers = providers.filter(Boolean);
+    this.timeoutMs = Math.max(1_000, timeoutMs);
     this.name = this.providers.map((provider) => provider.name).join(',') || 'none';
   }
 
@@ -30,7 +31,12 @@ export class ProviderManager implements AnimeProvider {
     let lastError: unknown;
     for (const provider of this.providers) {
       try {
-        return await attempt.run(provider);
+        return await Promise.race([
+          attempt.run(provider),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Provider timeout during ${attempt.operation}`)), this.timeoutMs),
+          ),
+        ]);
       } catch (error) {
         lastError = error;
       }
@@ -41,7 +47,6 @@ export class ProviderManager implements AnimeProvider {
   search(query: string, page: number, limit: number): Promise<ProviderPage<AnimeRecord>> {
     return this.fallback({
       operation: 'search',
-      provider: this.providers[0],
       run: (provider) => provider.search(query, page, limit),
     });
   }
@@ -49,7 +54,6 @@ export class ProviderManager implements AnimeProvider {
   top(page: number, limit: number): Promise<ProviderPage<AnimeRecord>> {
     return this.fallback({
       operation: 'top',
-      provider: this.providers[0],
       run: (provider) => provider.top(page, limit),
     });
   }
@@ -57,7 +61,6 @@ export class ProviderManager implements AnimeProvider {
   details(externalId: string): Promise<AnimeRecord | null> {
     return this.fallback({
       operation: 'details',
-      provider: this.providers[0],
       run: (provider) => provider.details(externalId),
     });
   }
@@ -65,7 +68,6 @@ export class ProviderManager implements AnimeProvider {
   episodes(externalId: string, page: number, limit: number): Promise<ProviderPage<EpisodeRecord>> {
     return this.fallback({
       operation: 'episodes',
-      provider: this.providers[0],
       run: (provider) => provider.episodes(externalId, page, limit),
     });
   }
@@ -74,7 +76,11 @@ export class ProviderManager implements AnimeProvider {
     if (!this.providers.length) return false;
     for (const provider of this.providers) {
       try {
-        if (await provider.healthCheck()) return true;
+        const healthy = await Promise.race([
+          provider.healthCheck(),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), this.timeoutMs)),
+        ]);
+        if (healthy) return true;
       } catch (_) {
         // Continue to the next provider.
       }

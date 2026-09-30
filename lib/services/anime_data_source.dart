@@ -16,11 +16,11 @@ abstract class AnimeDataSource {
   });
 
   /// Upcoming/unaired titles for the sidebar's "Coming Soon" item (see
-  /// docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8).
+  /// current app settings architecture).
   Future<Map<String, dynamic>> comingSoon({int page = 1, int limit = 24});
 
   /// Distinct broadcast years in the catalog, for the sidebar's "Seasons"
-  /// item (see docs/SETTINGS_SIDEBAR_PLAN.md, Phase 8).
+  /// item (see current app settings architecture).
   Future<Map<String, dynamic>> seasonYears();
 
   /// Catalog titles for one broadcast year.

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/theme_controller.dart';
 import '../core/app_language.dart';
-import '../services/backend_service.dart';
 import '../services/analytics_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/monitoring_service.dart';
@@ -45,14 +44,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int selected = 0;
   late Future<List<Anime>> futureAnime;
   late Future<CatalogPage> futureManga;
-  late final BackendService _backend;
 
   @override
   void initState() {
     super.initState();
     futureAnime = repository.getTopAnime();
     futureManga = catalogRepository.getPage('manga');
-    _backend = BackendService();
   }
 
   Future<void> retry() async {
@@ -115,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return UiStateCard(
             icon: Icons.cloud_off_rounded,
             title: 'تعذر تحميل الأنمي',
-            message: 'يمكنك المحاولة مرة أخرى. إذا انقطع الاتصال سيحاول التطبيق الاستفادة من البيانات المخزنة محليًا.',
+            message: 'السبب: ${snapshot.error}\n\nاحتفظ بهذه الرسالة عند الإبلاغ عن المشكلة للمساعدة في التشخيص.',
             actionLabel: 'إعادة المحاولة',
             onAction: () => retry(),
           );
@@ -215,8 +212,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Could not load $titleEn',
                     ),
                     message: AppLanguage.instance.text(
-                      'سيتم استخدام البيانات المخزنة إن وجدت. تحقق من إعداد مصدر القسم ثم أعد المحاولة.',
-                      'Cached data will be used when available. Check the provider configuration and retry.',
+                      'السبب: ${snapshot.error}\n\nاحتفظ بالرسالة كاملة عند الإبلاغ عن المشكلة.',
+                      'Reason: ${snapshot.error}\n\nKeep the full message when reporting the problem.',
                     ),
                     actionLabel: AppLanguage.instance.text('إعادة المحاولة', 'Retry'),
                     onAction: () => setState(() {
@@ -355,7 +352,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _backend.dispose();
     catalogRepository.dispose();
     super.dispose();
   }
@@ -498,8 +494,8 @@ class _AnimationCatalogSectionState extends State<_AnimationCatalogSection> {
                   icon: Icons.movie_filter_outlined,
                   title: language.text('تعذر تحميل الرسوم المتحركة', 'Could not load animation'),
                   message: language.text(
-                    'تحقق من اتصال المصدر ثم أعد المحاولة.',
-                    'Check the provider connection and retry.',
+                    'السبب: $error\n\nسبب الفشل ظاهر للمساعدة في التشخيص.',
+                    'Reason: $error\n\nThe failure reason is intentionally visible to aid diagnosis.',
                   ),
                   actionLabel: language.text('إعادة المحاولة', 'Retry'),
                   onAction: () => _load(reset: true),
@@ -544,7 +540,7 @@ class _AnimationCatalogSectionState extends State<_AnimationCatalogSection> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Text(
-                  language.text('تعذر تحميل المزيد حاليًا.', 'Could not load more right now.'),
+                  language.text('تعذر تحميل المزيد. السبب: $error', 'Could not load more. Reason: $error'),
                   textAlign: TextAlign.center,
                 ),
               ),

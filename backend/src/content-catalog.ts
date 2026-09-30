@@ -81,7 +81,7 @@ export async function contentCatalogPage(
   try {
     cached = await dbPage(db, kind, page, limit);
   } catch (_) {
-    // V1.24 is provider-first: the section still works if its D1 migration has not been applied yet.
+    // The content catalog is provider-first: the section still works if its D1 migration has not been applied yet.
   }
   // Animation categories are query-dependent, so never satisfy them from the
   // category-agnostic D1 cache. Manga can continue using its normal cache.

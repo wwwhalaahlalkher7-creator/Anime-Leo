@@ -39,7 +39,7 @@ abstract class MonetizationService {
   Future<void> dispose();
 }
 
-/// V1.17 preparation layer. No ad SDK is bundled and no ad network is active.
+/// Preparation layer. No ad SDK is bundled and no ad network is active.
 /// A future provider must be explicitly reviewed and injected behind this API.
 class NoOpMonetizationService implements MonetizationService {
   @override

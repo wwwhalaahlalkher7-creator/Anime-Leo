@@ -12,12 +12,12 @@ import '../screens/local_lists_screen.dart';
 import '../services/analytics_service.dart';
 
 /// App-wide sidebar, opened from a hamburger icon (see
-/// docs/SETTINGS_SIDEBAR_PLAN.md, Phase 1).
+/// current app settings architecture).
 ///
 /// Home / Favorites / Watch History already exist as tabs on [HomeScreen],
 /// so those items just switch tabs via [onSelectTab] instead of pushing a
 /// duplicate screen. "Coming Soon" and "Seasons" push their real screens
-/// (Phase 8). Everything else still pushes a [ComingSoonScreen] placeholder
+/// (the animation-catalog phase). Everything else still pushes a [ComingSoonScreen] placeholder
 /// until its own phase builds it out — note that's the "under development"
 /// widget, not the sidebar's "Coming Soon" catalog item.
 class AppDrawer extends StatelessWidget {

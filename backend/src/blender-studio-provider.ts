@@ -9,7 +9,7 @@ import type { ProviderPage } from './types';
  * Sintel, Elephants Dream, Tears of Steel, etc.) published by the rights
  * holder itself under Creative Commons Attribution. This is animation, not
  * anime — it belongs behind the plan's separate "Animation List" content
- * type (Phase 8 of SETTINGS_SIDEBAR_PLAN.md), not the anime episode/video
+ * type (the animation catalog integration plan), not the anime episode/video
  * pipeline in video-provider.ts.
  *
  * License note: CC BY still requires attribution, and the exact version

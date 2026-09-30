@@ -12,18 +12,18 @@ import 'privacy_policy_screen.dart';
 
 /// Full Settings screen, reachable from the sidebar.
 ///
-/// Section status (see docs/SETTINGS_SIDEBAR_PLAN.md):
-/// - Account: placeholder only — Phase 3 decided no edit-profile UI, no
+/// Section status (see current app settings architecture):
+/// - Account: placeholder only — the current account layer decided no edit-profile UI, no
 ///   visibility toggles, no auth until local-profile vs. real backend
 ///   accounts is decided.
-/// - Notifications: real toggles, wired to [AppSettings] (Phase 4). Actually
+/// - Notifications: real toggles, wired to [AppSettings] (the current notification layer). Actually
 ///   delivering push notifications still needs a notification pipeline that
 ///   doesn't exist in this codebase yet.
-/// - Player: real picker, wired to [AppSettings] (Phase 5). Launching a true
+/// - Player: real picker, wired to [AppSettings] (the current player layer). Launching a true
 ///   external player still needs an Android intent/plugin dependency.
 /// - General: appearance now supports system/light/dark, wired to
-///   [ThemeController] (Phase 6).
-/// - Other: still a placeholder — links land in Phase 7.
+///   [ThemeController] (the current theme layer).
+/// - Other: still a placeholder — links land in the current settings links.
 class SettingsScreen extends StatelessWidget {
   final ThemeController theme;
 

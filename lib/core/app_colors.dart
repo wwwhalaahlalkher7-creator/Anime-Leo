@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Centralized app palette.
 ///
-/// Source of truth for every screen's colors — see docs/SETTINGS_SIDEBAR_PLAN.md
+/// Source of truth for every screen's colors — see current app settings architecture
 /// ("Color palette" section) for where each role is meant to be used. Screens should
 /// read colors from `Theme.of(context).colorScheme` (built from these values in
 /// `app_theme.dart`) rather than hardcoding hex values directly.

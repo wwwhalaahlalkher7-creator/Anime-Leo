@@ -1,13 +1,14 @@
+export 'app_version.dart';
+
 const String apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
   defaultValue: 'https://anime-leo.www-halaahlalkher7.workers.dev/api',
 );
 
 const String appName = 'Anime Leo';
-const String appVersion = '1.25.4';
 
-/// Links for the Settings > Other section (Phase 7, see
-/// docs/SETTINGS_SIDEBAR_PLAN.md). Left blank until the project has real
+/// Links for the Settings > Other section (the current settings links, see
+/// current app settings architecture). Left blank until the project has real
 /// destinations; each is overridable at build time without a code change,
 /// same as [apiBaseUrl]. UI that uses these treats an empty value as
 /// "not configured yet" rather than attempting a broken link.

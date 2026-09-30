@@ -5,12 +5,12 @@ export '../services/storage_service.dart' show EpisodeAlertScope, PlayerPreferen
 
 /// Settings that don't already have a home in [ThemeController] or
 /// [AppLanguage] — Notifications and Player state for now (see
-/// docs/SETTINGS_SIDEBAR_PLAN.md, Phase 2). Mirrors their singleton
+/// current app settings architecture). Mirrors their singleton
 /// `ChangeNotifier` + `load()` pattern and persists via [StorageService],
 /// same as favorites/history.
 ///
 /// This is the data model only. UI for these lands in later phases
-/// (Notifications: Phase 4, Player: Phase 5) — nothing reads this yet.
+/// (Notifications: the current notification layer, Player: the current player layer) — nothing reads this yet.
 class AppSettings extends ChangeNotifier {
   static final AppSettings instance = AppSettings._();
   AppSettings._();

@@ -24,7 +24,7 @@ or Creative Commons is **very rare** — almost none of what people mean by
    apart from "someone uploaded a copyrighted show anyway."
 3. **Anime-specific "free streaming" APIs** (Consumet/Gogoanime-style,
    the amvstrm/Miru API family, etc.) — these proxy or scrape unlicensed
-   sources. They're exactly what `docs/SETTINGS_SIDEBAR_PLAN.md` already
+   sources. They're exactly what the current app architecture already
    ruled out for this project (same category as Anime4up / "Anime
    Witcher"). Listed below only so it's clear they were considered and
    rejected, not missed.
@@ -58,8 +58,7 @@ is written and delivered (see chat), mirroring the existing
   `videoProvider.getEpisodeVideo()`.
 - `NoOpAnimationProvider` — safe default, same pattern as `NoOpVideoProvider`.
 Not yet wired into `index.ts`, a D1 table, or a Flutter screen — that's the
-Animation List backend route + screen work itself (Phase 8 of
-`SETTINGS_SIDEBAR_PLAN.md`), a separate task from this provider adapter.
+Animation List backend route + screen work itself (the current animation-catalog plan), a separate task from this provider adapter.
 
 ## Option 2 — Internet Archive (archive.org)
 - What it is: a large, well-documented hosting/metadata service
@@ -119,7 +118,7 @@ placeholder icon/state text, and `pubspec.yaml` has no video-playback
 package (no `video_player`, `chewie`, or `webview_flutter`). So even once
 an `AnimationAsset.streamUrl` (HLS) exists from `blender-studio-provider.ts`,
 nothing in the Flutter app can play it yet. That's a real dependency add
-(same category as Phase 5's external-player intent or Phase 7's
+(same category as the current player layer's external-player intent or the current settings links's
 `url_launcher`/`share_plus`) — separate from, and needed before, any
 Animation List screen can actually play a title.
 
@@ -127,9 +126,9 @@ Animation List screen can actually play a title.
 - Nothing to wire in for actual anime episodes — no real source cleared
   that bar. The project's current behavior (video disabled, real "no
   licensed source configured" message) stays correct.
-- For the "Animation List" sidebar item (Phase 8): Blender Studio's open
+- For the "Animation List" sidebar item (the animation-catalog phase): Blender Studio's open
   movies are ready to use with a clean license, and the provider adapter
   now exists — wiring it into a real route/table/screen is the remaining
-  Phase 8 work, plus adding actual HLS playback to the Flutter app.
+  the animation-catalog phase work, plus adding actual HLS playback to the Flutter app.
 - Internet Archive stays a manual, title-by-title option, not an API
   integration, unless/until specific verified IDs are supplied.

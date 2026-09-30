@@ -24,7 +24,7 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             AppLanguage.instance.text(
-              'التطبيق لاكتشاف الأنمي ومتابعته: تصفح كتالوجًا، احفظ المفضلة، وتابع سجل مشاهدتك. بيانات الأنمي (العناوين، الصور، التقييمات) تُجلب من مصادر تعريفية عامة (Jikan وAniList)، وليست مملوكة لهذا التطبيق.',
+              'التطبيق لاكتشاف الأنمي ومتابعته: تصفح كتالوجًا، احفظ المفضلة، وتابع سجل مشاهدتك. بيانات الأنمي (العناوين، الصور، التقييمات) تُجلب مباشرة من Jikan في النسخة الحالية وليست مخزنة في D1 داخل التطبيق.',
               'This app is an anime discovery and tracking app: browse a catalog, save favorites, and keep a watch history. Anime metadata (titles, images, ratings) comes from public metadata providers (Jikan and AniList) and isn\'t owned by this app.',
             ),
             style: const TextStyle(height: 1.7),
